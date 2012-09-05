@@ -1,4 +1,4 @@
-# store message handlers by their command string
+# store message parsers by their command string
 PARSERS = {}
 
 def command(name, *types):
@@ -13,7 +13,7 @@ def command(name, *types):
 			# coerced to their respective types
 			return [name] + [types[i](arguments[i]) for i in range(len(types))]
 		except ValueError as e:
-			raise ValueError('malformed argument: ' + str(e))
+			raise ValueError('malformed argument', str(e))
 		except IndexError as e:
 			raise ValueError('invalid number of arguments', len(types), len(arguments))
 
@@ -28,11 +28,11 @@ join = command('join', str)
 # turn command, format: turn <turn_number> <energy>
 turn = command('turn', int, float)
 
-# fire command, format: fire <angle> <distance> <radius>
-fire = command('fire', float, float, float)
-
 # move command, format: move <angle> <distance>
 move = command('move', float, float)
+
+# fire command, format: fire <angle> <distance> <radius>
+fire = command('fire', float, float, float)
 
 # scan command, format: scan <radius>
 scan = command('scan', float)
