@@ -1,9 +1,9 @@
-Total Annihilation
-=================
+LoBotomy
+========
 
 A game server for a digital robotic war - an open warzone where robots come to have fun.
 
-Total Annihilation is a timed turn based programming challenge game where players design and implement their own robots and have them battle other player's implementations online.
+LoBotmy is a timed turn based programming challenge game where players design and implement their own robots and have them battle other player's implementations online.
 The goal is to deal as much damage to other robots while trying to stay alive in the fierce environment.
 
 Initial design
