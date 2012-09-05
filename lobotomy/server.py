@@ -1,9 +1,11 @@
 import socket
+from threading import Thread
 
 class LoBotomyServer:
 	"""
 	Server for a LoBotomy game.
 	"""
+
 	def __init__(self, host = '', port = sum(map(ord, 'LoBotomyServer'))):
 		self.host = host
 		self.port = port
@@ -24,3 +26,30 @@ class LoBotomyServer:
 				client, address = self._ssock.accept()
 			except:
 				pass
+
+class Player(Thread):
+	"""
+	Class modeling a player, handling messages from and to a client.
+	"""
+
+	def __init__(self, server, sock):
+		# call the constructor of Thread
+		super().__init__(self)
+
+		# indicate being a daemon thread
+		self.daemon = True
+
+		self._server = server
+		self._sock = sock
+
+	def run(self):
+		pass
+
+	def handle(self, command, remainder):
+		pass
+
+	def send(self, command, *arguments):
+		pass
+
+	def shutdown(selfs):
+		pass
