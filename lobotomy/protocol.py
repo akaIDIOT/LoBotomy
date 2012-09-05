@@ -1,11 +1,12 @@
 # store message handlers by their command string
-HANDLERS = {}
+PARSERS = {}
 
 def command(name, *types):
 	"""
 	Creates a command parser for a named command requiring the provided types
 	as arguments.
 	"""
+
 	def parser(*arguments):
 		try:
 			# create a list of the command's name and all the arguments
@@ -17,6 +18,30 @@ def command(name, *types):
 			raise ValueError('invalid number of arguments', len(types), len(arguments))
 
 	# map the handler's name to its parser
-	HANDLERS[name] = parser
+	PARSERS[name] = parser
 
 	return parser
+
+# join command, format: join <name>
+join = command('join', str)
+
+# turn command, format: turn <turn_number> <energy>
+turn = command('turn', int, float)
+
+# fire command, format: fire <angle> <distance> <radius>
+fire = command('fire', float, float, float)
+
+# move command, format: move <angle> <distance>
+move = command('move', float, float)
+
+# scan command, format: scan <radius>
+scan = command('scan', float)
+
+# hit command, format: hit <name> <energy>
+hit = command('hit', str, float)
+
+# detect command, format: detect <name> <angle> <distance>
+detect = command('detect', str, float, float)
+
+# error command, format: error <error_number> <explanation>
+error = command('error', int, str)
