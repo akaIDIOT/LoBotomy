@@ -15,7 +15,11 @@ If energy runs out (by moving too far or getting shot at, for example), a player
 Luckily, robots obviously have solar panels and battlefields are like perpetual summer, so players get a fixed amount of energy per turn.
 The details on firing a bombs and the energy cost of firing distance, bomb yield and blast radius combined with how much hurt a bomb causes are yet to be determined.
 
-Turns executed synchronously: all players' moves are performed at the same time.
+Turn cycle
+----------
+A turn starts out with a broadcast to all players that the next turn starts.
+At this point, all players can determine their next actions and send these to the server.
+The server keeps all valid requests until the turn time has expired, at which point all actions are performed at the same time for all players.
 A turn has three steps, in order:
 
  - **Moving**: all requested moves are done.
@@ -24,5 +28,7 @@ A turn has three steps, in order:
 
 Note that as moves are done before bombs, some guess as to the location of an adversary will have to made.
 
+Results for actions are transmitted back to clients, after which a new turn is broadcast and the cycle starts again.
+
 How a player can be reincarnated, how scores are calculated and the like are all unknown at the moment.
-Gaps will be filled when there is a clear moment for it to be filled.
+Gaps will be filled when there is a clear moment for it to be filled :)
