@@ -8,9 +8,9 @@ So, for example, a command the client might use to tell the server it wants to j
 
 ```java
 // define our name to be Henk
-String name = 'Henk';
+String name = "Henk";
 // write the join command, followed by a space and our name, terminated with a newline
-output.write('join' + ' ' + name + '\n');
+output.write("join" + " " + name + "\n");
 ```
 
 As we model client/server communication as a conversation, the server could respond with a welcome message, read by the client as such:
