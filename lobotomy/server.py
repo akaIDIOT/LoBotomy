@@ -93,12 +93,15 @@ class Player(Thread):
 
 	def signal_begin(self, turn_number, energy):
 		self.state = PlayerState.ACTING
+		self.send(protocol.begin(turn_number, energy).values())
 
 	def signal_end(self):
 		self.state = PlayerState.WAITING
+		self.send(protocol.end().values())
 
 	def signal_death(self, turns):
 		self.state = PlayerState.DEAD
+		self.send(protocol.death(turns).values())
 
 	def handle_join(self, name):
 		if self.state is not PlayerState.WAITING:
@@ -128,8 +131,8 @@ class Player(Thread):
 		self.send(protocol.error(error, protocol.ERRORS[error]))
 
 	def send(self, *arguments):
-		# send all data separated by spaces, terminated by a newline
-		self._sock.sendall(' '.join(arguments) + '\n')
+		# send all data as strings separated by spaces, terminated by a newline
+		self._sock.sendall(' '.join(map(str, arguments)) + '\n')
 
 	def shutdown(self):
 		# indicate a shutdown was
