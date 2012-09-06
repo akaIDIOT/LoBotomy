@@ -28,3 +28,44 @@ if (parts[0].equals("welcome")) {
 
 The above might not be the most efficient code, but the idea is clear.
 
+Protocol
+--------
+
+The conversation between client and server supports the following commands:
+
+### join
+Format: `join name`
+
+### welcome
+Format: `welcome version energy turn-duration turns-left`
+
+### spawn
+Format: `spawn`
+
+### turn
+Format: `turn turn-number energy`
+
+### move
+Format: `move angle distance`
+
+### fire
+Format: `fire angle distance radius yield`
+
+### scan
+Format: `scan radius`
+
+### ok
+Format: `ok`
+
+### hit
+Format: `hit name angle yield`
+
+### death
+Format: `death turns`
+
+### detect
+Format: `detect name angle distance energy`
+
+### error
+Format: `error error-number explanation`
+
