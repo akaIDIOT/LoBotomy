@@ -4,6 +4,10 @@ Network connection life cycle
 Communication with a LoBotomy server is done by opening a network socket to it and starting a conversation.
 To keep things simple, such a conversation is done by sending strings over the network connection.
 A single command consists of the command's name and its arguments separated by spaces, terminated with a newline character (`\n`).
+Arguments are all encoded as strings over the wire, so a float will be sent as `"0.12345"`, for example.
+Note that the server is the one determining the precision of floating point values; `"0.1111111111111111111111111111111111111111111111"` will likely be truncated to `0.111111111111` or similar, without the client being notified.
+The precision of floating point values is considered to be sufficient for the use case of LoBotomy (requesting actions on the edge of precision limits are at the client's risk ;)).
+
 So, for example, a command the client might use to tell the server it wants to join the game, the client might execute the following code:
 
 ```java
