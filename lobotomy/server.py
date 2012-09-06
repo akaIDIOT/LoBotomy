@@ -1,7 +1,7 @@
 import socket
 from threading import Thread
 
-from lobotomy import protocol
+from lobotomy import LoBotomyException, protocol
 from lobotomy.util import enum
 
 class LoBotomyServer:
@@ -32,7 +32,7 @@ class LoBotomyServer:
 				pass
 
 # enumerate possible player states
-PlayerState = enum('VOID', 'ACTING', 'WAITING', 'DEAD')
+PlayerState = enum('VOID', 'WAITING', 'ACTING', 'DEAD')
 
 class Player(Thread):
 	"""
@@ -79,6 +79,8 @@ class Player(Thread):
 
 				# handle command
 				self._handlers[command](**arguments)
+		except LoBotomyException as e:
+			self.send_error(e.errno)
 		except KeyError as e:
 			self.send_error(301)
 		except ValueError as e:
@@ -89,23 +91,41 @@ class Player(Thread):
 				# TODO: log error
 				self.shutdown()
 
+	def signal_begin(self, turn_number, energy):
+		self.state = PlayerState.ACTING
+
+	def signal_end(self):
+		self.state = PlayerState.WAITING
+
+	def signal_death(self, turns):
+		self.state = PlayerState.DEAD
+
 	def handle_join(self, name):
-		pass
+		if self.state is not PlayerState.WAITING:
+			raise LoBotomyException(202)
+
+		self.state = PlayerState.DEAD
 
 	def handle_spawn(self):
-		pass
+		if self.state is not PlayerState.DEAD:
+			raise LoBotomyException(202)
+
+		self.state = PlayerState.WAITING
 
 	def handle_move(self, direction, distance):
-		pass
+		if self.state is not PlayerState.ACTING:
+			raise LoBotomyException(202)
 
 	def handle_fire(self, direction, distance, radius, charge):
-		pass
+		if self.state is not PlayerState.ACTING:
+			raise LoBotomyException(202)
 
 	def handle_scan(self, radius):
-		pass
+		if self.state is not PlayerState.ACTING:
+			raise LoBotomyException(202)
 
-	def send_error(self, error, exception = None):
-		self.send(protocol.error(error, str(exception) if exception else None))
+	def send_error(self, error):
+		self.send(protocol.error(error, protocol.ERRORS[error]))
 
 	def send(self, *arguments):
 		# send all data separated by spaces, terminated by a newline
