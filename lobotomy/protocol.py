@@ -87,11 +87,11 @@ scan = command('scan',
 # end command, format: end
 end = command('end')
 
-# hit command, format: hit <name> <epicenter_angle> <yield>
+# hit command, format: hit <name> <epicenter_angle> <charge>
 hit = command('hit',
 	('name', str),
 	('angle', float),
-	('yield', float))
+	('charge', float))
 
 # death command, format: death <turns>
 death = command('death',
