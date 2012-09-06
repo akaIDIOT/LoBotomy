@@ -117,7 +117,8 @@ def parse_msg(msg):
 	including the message name
 	'''
 	try:
-		chunks = msg.split(' ')
-		return PARSERS[chunks[0]](chunks[1:])
-	except:
+		chunks = msg.split()
+		return PARSERS[chunks[0]](*chunks[1:])
+	except Exception as e:
+		print(e)
 		return None
