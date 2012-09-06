@@ -1,3 +1,6 @@
+# current protocol version
+VERSION = 0
+
 # predefine error codes
 ERRORS = {
 	101: 'move impossible, not enough energy',
