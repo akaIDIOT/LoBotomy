@@ -22,7 +22,7 @@ def command(name, *types):
 		try:
 			# create a list of the command's name and all the arguments
 			# coerced to their respective types
-			return [name] + [types[i](arguments[i]) for i in range(len(types))]
+			return [types[i](arguments[i]) for i in range(len(types))]
 		except ValueError as e:
 			raise ValueError('malformed argument', str(e))
 		except IndexError as e:
@@ -68,4 +68,3 @@ detect = command('detect', str, float, float, float)
 
 # error command, format: error <error_number> <explanation>
 error = command('error', int, str)
-
