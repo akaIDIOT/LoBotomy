@@ -1,4 +1,15 @@
-# store message handlers by their command string
+# predefine error codes
+ERRORS = {
+	101: 'move impossible, not enough energy',
+	102: 'fire impossible, not enough energy',
+	103: 'scan impossible, not enough energy',
+	104: 'action impossible, you are dead',
+
+	201: 'name taken, choose another one',
+	202: 'invalid state for command',
+}
+
+# store message parsers by their command string
 PARSERS = {}
 
 def command(name, *types):
@@ -13,7 +24,7 @@ def command(name, *types):
 			# coerced to their respective types
 			return [name] + [types[i](arguments[i]) for i in range(len(types))]
 		except ValueError as e:
-			raise ValueError('malformed argument: ' + str(e))
+			raise ValueError('malformed argument', str(e))
 		except IndexError as e:
 			raise ValueError('invalid number of arguments', len(types), len(arguments))
 
@@ -25,23 +36,36 @@ def command(name, *types):
 # join command, format: join <name>
 join = command('join', str)
 
-# turn command, format: turn <turn_number> <energy>
-turn = command('turn', int, float)
+# welcome command, format: welcome <version> <energy> <charge> <turn_duration> <turns_left>
+welcome = command('welcome', int, float, float, int, int)
 
-# fire command, format: fire <angle> <distance> <radius>
-fire = command('fire', float, float, float)
+# spawn command, format: spawn
+spawn = command('spawn')
+
+# begin command, format: begin <turn_number> <energy>
+begin = command('begin', int, float)
 
 # move command, format: move <angle> <distance>
 move = command('move', float, float)
 
+# fire command, format: fire <angle> <distance> <radius> <yield>
+fire = command('fire', float, float, float, float)
+
 # scan command, format: scan <radius>
 scan = command('scan', float)
 
-# hit command, format: hit <name> <energy>
-hit = command('hit', str, float)
+# end command, format: end
+end = command('end')
 
-# detect command, format: detect <name> <angle> <distance>
-detect = command('detect', str, float, float)
+# hit command, format: hit <name> <epicenter_angle> <yield>
+hit = command('hit', str, float, float)
+
+# death command, format: death <turns>
+death = command('death', int)
+
+# detect command, format: detect <name> <angle> <distance> <energy>
+detect = command('detect', str, float, float, float)
 
 # error command, format: error <error_number> <explanation>
 error = command('error', int, str)
+
