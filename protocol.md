@@ -8,7 +8,7 @@ Arguments are all encoded as strings over the wire, so a float will be sent as `
 Note that the server is the one determining the precision of floating point values; `"0.1111111111111111111111111111111111111111111111"` will likely be truncated to `0.111111111111` or similar, without the client being notified.
 The precision of floating point values is considered to be sufficient for the use case of LoBotomy (requesting actions on the edge of precision limits are at the client's risk ;)).
 
-So, for example, a command the client might use to tell the server it wants to join the game, the client might execute the following code:
+So, for example, a command the client might use to tell the server it wants to join the game could be constructed and set like this:
 
 ```java
 // define our name to be Henk
@@ -120,7 +120,7 @@ Sent by the server to inform you that you are dead and how long you need to wait
 ### detect
 Format: `detect name angle distance energy`
 
-Sent by the server to inform you that their scan detected another player, with the following details:
+Sent by the server to inform you that your scan detected another player, with the following details:
 
 1. **name** (string): the name of the detected player;
 1. **angle** (radian, float): the direction of the detected player;
@@ -130,7 +130,7 @@ Sent by the server to inform you that their scan detected another player, with t
 ### error
 Format: `error error-code explanation`
 
-Sent by the server in response to a command sent by the client to indicate that the command could not be accepted, with the following details:
+Sent by the server in response to a command sent by you to indicate that the command could not be accepted, with the following details:
 
 1. **error-code** (integer): numerical representation of the error;
 1. **explanation** (string): an elaboration of the error, only serving a debug purpose (not to be used by clients in any meaningful way).
