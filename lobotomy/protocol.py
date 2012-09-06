@@ -1,3 +1,4 @@
+# Make sure flake8 ignores this file: flake8: noqa
 # current protocol version
 VERSION = 0
 
@@ -75,3 +76,16 @@ detect = command('detect', str, float, float, float)
 
 # error command, format: error <error_number> <explanation>
 error = command('error', int, str)
+
+def parse_msg(msg):
+	'''
+	Parser helper function. Provide this with a message directly from the
+	socket and it will parse it using the correct function, returning
+	a dictionary containing parameters for the given protocol message,
+	including the message name
+	'''
+	try:
+		chunks = msg.split(' ')
+		return PARSERS[chunks[0]](msg)
+	except:
+		return None
