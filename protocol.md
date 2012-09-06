@@ -125,3 +125,27 @@ Sent by the server in response to a command sent by the client to indicate that 
 1. **error-code** (integer): numerical representation of the error;
 1. **explanation** (string): an elaboration of the error, only serving a debug purpose (not to be used by clients in any meaningful way).
 
+Example
+-------
+
+Below is an example of a conversation between a client and a server.
+`→` indicates a message from the client to server, `←` a message from the server to the client.
+Remarks are inserted after a `#`-character.
+
+```
+→ join Henk                   # join the game as Henk
+← welcome 1 1.0 5000 -1
+→ spawn
+← begin 123 1.0               # Henk has 1.0 energy left
+→ move 0.123 0.2              # take a gentle stroll…
+→ scan 0.4                    # …and take a look around
+← end
+← detect Klaas 1.234 0.3 0.4  # Henk detected Klaas over there
+← begin
+→ fire 1.123 0.3 0.2 0.4      # fire at Klaas' location with 0.2 blast radius
+← end
+← hit Henk 1.123 0.4          # radius was rather large, Henk hit himself
+← hit Klaas 1.123 0.6         # adversary was not stupid, fired at Henk
+← death 5                     # Henk died, is dead for 5 turns
+```
+
