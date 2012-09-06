@@ -12,6 +12,10 @@ class LoBotomyServer:
 	def __init__(self, host = '', port = sum(map(ord, 'LoBotomyServer'))):
 		self.host = host
 		self.port = port
+	
+	def shutdown(self):
+		self._shutdown = True
+		self._ssock.close()
 
 	def serve_forever(self):
 		self._ssock = socket.socket()
