@@ -50,8 +50,6 @@ class Player(Thread):
 		self._sock = sock
 		self._shutdown = False
 
-		self.state = PlayerState.VOID
-
 		self._handlers = {
 			'join': self.handle_join,
 			'spawn': self.handle_spawn,
@@ -59,6 +57,12 @@ class Player(Thread):
 			'fire': self.handle_fire,
 			'scan': self.handle_scan,
 		}
+
+		self.state = PlayerState.VOID
+
+		self.move = None
+		self.fire = None
+		self.scan = None
 
 	def run(self):
 		try:
@@ -93,6 +97,12 @@ class Player(Thread):
 
 	def signal_begin(self, turn_number, energy):
 		self.state = PlayerState.ACTING
+
+		# reset action requests
+		self.move = None
+		self.fire = None
+		self.scan = None
+
 		self.send(protocol.begin(turn_number, energy).values())
 
 	def signal_end(self):
@@ -119,13 +129,22 @@ class Player(Thread):
 		if self.state is not PlayerState.ACTING:
 			raise LoBotomyException(202)
 
+		# TODO: check validity
+		self.move = (direction, distance)
+
 	def handle_fire(self, direction, distance, radius, charge):
 		if self.state is not PlayerState.ACTING:
 			raise LoBotomyException(202)
 
+		# TODO: check validity
+		self.fire = (direction, distance, radius, charge)
+
 	def handle_scan(self, radius):
 		if self.state is not PlayerState.ACTING:
 			raise LoBotomyException(202)
+
+		# TODO: check validity
+		self.scan = (radius,)
 
 	def send_error(self, error):
 		self.send(protocol.error(error, protocol.ERRORS[error]))
