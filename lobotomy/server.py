@@ -37,6 +37,8 @@ PlayerState = enum('VOID', 'WAITING', 'ACTING', 'DEAD')
 class Player(Thread):
 	"""
 	Class modeling a player, handling messages from and to a client.
+
+	TODO: queue signals, just just before end
 	"""
 
 	def __init__(self, server, sock):
@@ -109,9 +111,15 @@ class Player(Thread):
 		self.state = PlayerState.WAITING
 		self.send(protocol.end().values())
 
+	def signal_hit(self, name, angle, charge):
+		self.send(protocol.fire(name, angle, charge).values())
+
 	def signal_death(self, turns):
 		self.state = PlayerState.DEAD
 		self.send(protocol.death(turns).values())
+
+	def signal_detect(self, name, angle, distance, energy):
+		self.send(protocol.detect(name, angle, distance, energy).values())
 
 	def handle_join(self, name):
 		if self.state is not PlayerState.WAITING:
