@@ -2,6 +2,7 @@ import socket
 from threading import Thread
 
 from lobotomy import protocol
+from lobotomy.util import enum
 
 class LoBotomyServer:
 	"""
