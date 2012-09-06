@@ -118,6 +118,6 @@ def parse_msg(msg):
 	'''
 	try:
 		chunks = msg.split(' ')
-		return PARSERS[chunks[0]](msg)
+		return PARSERS[chunks[0]](chunks[1:])
 	except:
 		return None
