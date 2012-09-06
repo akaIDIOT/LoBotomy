@@ -12,8 +12,6 @@ class LoBotomyServer:
 		self.host = host
 		self.port = port
 
-		self.players = []
-
 	def serve_forever(self):
 		self._ssock = socket.socket()
 		# bind a socket to the specified host and port
@@ -28,9 +26,7 @@ class LoBotomyServer:
 			try:
 				# accept a connection from a client
 				client, address = self._ssock.accept()
-				client = Player(self, client)
-				self.players.append(client)
-				client.start()
+				Player(self, client).start()
 			except:
 				pass
 
@@ -76,9 +72,9 @@ class Player(Thread):
 				# handle command
 				self._handlers[command](*arguments)
 		except KeyError as e:
-			pass
+			self.send_error(301)
 		except ValueError as e:
-			pass
+			self.send_error(302)
 		except Exception as e:
 			if not self._shutdown:
 				# error occurred during regular operations
@@ -100,6 +96,9 @@ class Player(Thread):
 	def handle_scan(self, raidus):
 		pass
 
+	def send_error(self, error, exception = None):
+		self.send(protocol.error(error, str(exception) if exception else None))
+
 	def send(self, *arguments):
 		# send all data separated by spaces, terminated by a newline
 		self._sock.sendall(' '.join(arguments) + '\n')
@@ -112,6 +111,4 @@ class Player(Thread):
 		self._sock.shutdown()
 		self._sock.close()
 
-		# remove self from the server's player list
-		# XXX: should this be here, or should something like server.leave(self) be called?
-		self.server.players.remove(self)
+		# TODO: indicate shutdown at server

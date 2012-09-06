@@ -2,6 +2,7 @@
 VERSION = 0
 
 # predefine error codes
+# TODO: store error codes in constants
 ERRORS = {
 	101: 'move impossible, not enough energy',
 	102: 'fire impossible, not enough energy',
@@ -10,6 +11,9 @@ ERRORS = {
 
 	201: 'name taken, choose another one',
 	202: 'invalid state for command',
+
+	301: 'unrecognized or unsupported command',
+	302: 'invalid command',
 }
 
 # store message parsers by their command string
@@ -25,7 +29,7 @@ def command(name, *types):
 		try:
 			# create a list of the command's name and all the arguments
 			# coerced to their respective types
-			return [types[i](arguments[i]) for i in range(len(types))]
+			return [name] + [types[i](arguments[i]) for i in range(len(types))]
 		except ValueError as e:
 			raise ValueError('malformed argument', str(e))
 		except IndexError as e:
