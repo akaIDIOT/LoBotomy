@@ -31,7 +31,10 @@ The above might not be the most efficient code, but the idea is clear.
 Protocol
 --------
 
-The conversation between client and server supports the following commands:
+The conversation between client and server supports the commands listed below.
+It should be noted that the use of radians and distance is always relative to the player receiving the information.
+The internal location on the battlefield as tracked by the server is never exposed but is not needed either as the battlefield wraps.
+The same holds for angles: a player is free to define where zero radians is, as long as the reference point remains the same.
 
 ### join
 Format: `join name`
@@ -141,7 +144,7 @@ Remarks are inserted after a `#`-character.
 → scan 0.4                    # …and take a look around
 ← end
 ← detect Klaas 1.234 0.3 0.4  # Henk detected Klaas over there
-← begin
+← begin 124 0.6
 → fire 1.123 0.3 0.2 0.4      # fire at Klaas' location with 0.2 blast radius
 ← end
 ← hit Henk 1.123 0.4          # radius was rather large, Henk hit himself
