@@ -30,6 +30,9 @@ class LoBotomyServer:
 			except:
 				pass
 
+# enumerate possible player states
+PlayerState = enum('VOID', 'ACTING', 'WAITING', 'DEAD')
+
 class Player(Thread):
 	"""
 	Class modeling a player, handling messages from and to a client.
@@ -45,6 +48,8 @@ class Player(Thread):
 		self._server = server
 		self._sock = sock
 		self._shutdown = False
+
+		self.state = PlayerState.VOID
 
 		self._handlers = {
 			'join': self.handle_join,
@@ -65,12 +70,14 @@ class Player(Thread):
 				# remainder are arguments
 				arguments = parts[1:]
 				# parse arguments into their corresponding values
-				arguments = protocol.PARSERS[command](arguments)[1:]
+				arguments = protocol.PARSERS[command](arguments)
+				# remove the command, handles have no such argument
+				del arguments['command']
 
 				# reaching this point, arguments have been successfully parsed (not validated)
 
 				# handle command
-				self._handlers[command](*arguments)
+				self._handlers[command](**arguments)
 		except KeyError as e:
 			self.send_error(301)
 		except ValueError as e:
@@ -93,7 +100,7 @@ class Player(Thread):
 	def handle_fire(self, direction, distance, radius, charge):
 		pass
 
-	def handle_scan(self, raidus):
+	def handle_scan(self, radius):
 		pass
 
 	def send_error(self, error, exception = None):
