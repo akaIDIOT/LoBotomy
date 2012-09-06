@@ -85,6 +85,21 @@ class Player(Thread):
 				# TODO: log error
 				self.shutdown()
 
+	def handle_join(self, name):
+		pass
+
+	def handle_spawn(self):
+		pass
+
+	def handle_move(self, direction, distance):
+		pass
+
+	def handle_fire(self, direction, distance, radius, charge):
+		pass
+
+	def handle_scan(self, raidus):
+		pass
+
 	def send(self, *arguments):
 		# send all data separated by spaces, terminated by a newline
 		self._sock.sendall(' '.join(arguments) + '\n')
