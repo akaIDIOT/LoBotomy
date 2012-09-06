@@ -42,17 +42,8 @@ welcome = command('welcome', int, float, int, int)
 # spawn command, format: spawn
 spawn = command('spawn')
 
-# hit command, format: hit <name> <epicenter_angle> <yield>
-hit = command('hit', str, float, float)
-
-# death command, format: death <turns>
-death = command('death', int)
-
-# detect command, format: detect <name> <angle> <distance> <energy>
-detect = command('detect', str, float, float, float)
-
-# turn command, format: turn <turn_number> <energy>
-turn = command('turn', int, float)
+# begin command, format: begin <turn_number> <energy>
+begin = command('begin', int, float)
 
 # move command, format: move <angle> <distance>
 move = command('move', float, float)
@@ -63,5 +54,18 @@ fire = command('fire', float, float, float, float)
 # scan command, format: scan <radius>
 scan = command('scan', float)
 
+# end command, format: end
+end = command('end')
+
+# hit command, format: hit <name> <epicenter_angle> <yield>
+hit = command('hit', str, float, float)
+
+# death command, format: death <turns>
+death = command('death', int)
+
+# detect command, format: detect <name> <angle> <distance> <energy>
+detect = command('detect', str, float, float, float)
+
 # error command, format: error <error_number> <explanation>
 error = command('error', int, str)
+
