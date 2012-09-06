@@ -1,5 +1,7 @@
 # Make sure flake8 ignores this file: flake8: noqa
 # current protocol version
+from collections import OrderedDict
+
 VERSION = 0
 
 # predefine error codes
@@ -15,7 +17,7 @@ ERRORS = {
 
 	301: 'unrecognized or unsupported command',
 	302: 'invalid command',
-}
+	}
 
 # store message parsers by their command string
 PARSERS = {}
@@ -30,7 +32,12 @@ def command(name, *types):
 		try:
 			# create a list of the command's name and all the arguments
 			# coerced to their respective types
-			return [name] + [types[i](arguments[i]) for i in range(len(types))]
+			values = OrderedDict(command = name)
+			for i in range(len(types)):
+				arg_name, arg_type = types[i]
+				values[arg_name] = arg_type(arguments[i])
+
+			return values
 		except ValueError as e:
 			raise ValueError('malformed argument', str(e))
 		except IndexError as e:
@@ -42,40 +49,65 @@ def command(name, *types):
 	return parser
 
 # join command, format: join <name>
-join = command('join', str)
+join = command('join',
+	('name', str))
 
 # welcome command, format: welcome <version> <energy> <charge> <turn_duration> <turns_left>
-welcome = command('welcome', int, float, float, int, int)
+welcome = command('welcome',
+	('version', int),
+	('energy', float),
+	('charge', float),
+	('turn_duration', int),
+	('turns_left', int))
 
 # spawn command, format: spawn
 spawn = command('spawn')
 
 # begin command, format: begin <turn_number> <energy>
-begin = command('begin', int, float)
+begin = command('begin',
+	('turn_number', int),
+	('energy', float))
 
 # move command, format: move <angle> <distance>
-move = command('move', float, float)
+move = command('move',
+	('angle', float),
+	('distance', float))
 
 # fire command, format: fire <angle> <distance> <radius> <yield>
-fire = command('fire', float, float, float, float)
+fire = command('fire',
+	('angle', float),
+	('distance', float),
+	('radius', float),
+	('yield', float))
 
 # scan command, format: scan <radius>
-scan = command('scan', float)
+scan = command('scan',
+	('radius', float))
 
 # end command, format: end
 end = command('end')
 
 # hit command, format: hit <name> <epicenter_angle> <yield>
-hit = command('hit', str, float, float)
+hit = command('hit',
+	('name', str),
+	('angle', float),
+	('yield', float))
 
 # death command, format: death <turns>
-death = command('death', int)
+death = command('death',
+	('turns', int))
 
 # detect command, format: detect <name> <angle> <distance> <energy>
-detect = command('detect', str, float, float, float)
+detect = command('detect',
+	('name', str),
+	('angle', float),
+	('distance', float),
+	('energy', float))
 
 # error command, format: error <error_number> <explanation>
-error = command('error', int, str)
+error = command('error',
+	('errno', int),
+	('message', str))
 
 def parse_msg(msg):
 	'''
