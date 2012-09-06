@@ -36,8 +36,8 @@ def command(name, *types):
 # join command, format: join <name>
 join = command('join', str)
 
-# welcome command, format: welcome <version> <energy> <turn_duration> <turns_left>
-welcome = command('welcome', int, float, int, int)
+# welcome command, format: welcome <version> <energy> <charge> <turn_duration> <turns_left>
+welcome = command('welcome', int, float, float, int, int)
 
 # spawn command, format: spawn
 spawn = command('spawn')

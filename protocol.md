@@ -140,7 +140,7 @@ Remarks are inserted after a `#`-character.
 
 ```
 → join Henk                   # join the game as Henk
-← welcome 1 1.0 5000 -1
+← welcome 1 1.0 0.2 5000 -1
 → spawn
 ← begin 123 1.0               # Henk has 1.0 energy left
 → move 0.123 0.2              # take a gentle stroll…
