@@ -3,6 +3,7 @@
 import logging
 import socket
 from threading import Thread
+import time
 
 from lobotomy import config, LoBotomyException, protocol
 from lobotomy.util import enum
@@ -15,56 +16,72 @@ class LoBotomyServer:
 	def __init__(self, host = config.host.address, port = config.host.port):
 		self.host = host
 		self.port = port
-		
+
 		# track online players by name
 		self._players = {}
 		# track players in game
 		self._in_game = []
 
+		self.turn_number = 0
+
 	def serve_forever(self):
 		logging.debug('preparing network setup for serving at "%s:%d"', self.host, self.port)
 		self._ssock = socket.socket()
-		# bind a socket to the specified host and port
-		self._ssock.bind((self.host, self.port))
-		# make the socket listen for new connections
-		self._ssock.listen(5)
-		logging.info('succesfully bound to %s:%d, listening for clients', self.host, self.port)
+		try:
+			# bind a socket to the specified host and port
+			self._ssock.bind((self.host, self.port))
+			# make the socket listen for new connections
+			self._ssock.listen(5)
+			logging.info('succesfully bound to %s:%d, listening for clients', self.host, self.port)
 
-		self._shutdown = False
 
-		# loop as long as a shutdown was not requested
-		while not self._shutdown:
-			try:
-				# accept a connection from a client
-				client, address = self._ssock.accept()
-				logging.info('client from %s connected', address[0])
-				Player(self, client).start()
-			except Exception as e:
-				if not self._shutdown:
-					# no an expected exception
-					logging.critical('unexpected network error, shutting down server: %s', str(e))
-		
+			self._shutdown = False
+
+			# start a game
+			Thread(name = 'game loop', target = self.run_game).start()
+
+			# loop as long as a shutdown was not requested
+			while not self._shutdown:
+				try:
+					# accept a connection from a client
+					client, address = self._ssock.accept()
+					logging.info('client from %s connected', address[0])
+					Player(self, client).start()
+				except Exception as e:
+					if not self._shutdown:
+						# no an expected exception
+						logging.critical('unexpected network error, shutting down server: %s', str(e))
+		except Exception as e:
+			logging.critical('unexpected error: %s', str(e))
+
 		# TODO: close all client threads (not all present in self._players())
-	
+
+	def run_game(self):
+		logging.info('game loop started')
+		while not self._shutdown:
+			# TODO: run a turn
+			time.sleep(config.game.turn_duration / 1000)
+			logging.debug('slept like a baby...')
+
 	def register(self, name, player):
 		if name in self._players:
 			# TODO: include player host
 			logging.debug('player tried to register as %s, name is in use', name)
 			raise LoBotomyException(201)
-		
+
 		# register player
 		self._players[name] = player
 		# send welcome message
 		player.send(protocol.welcome(
-			protocol.VERSION, 
-			config.player.max_energy, 
-			config.player.turn_charge, 
+			protocol.VERSION,
+			config.player.max_energy,
+			config.player.turn_charge,
 			config.game.turn_duration,
 			-1
-		))
+		).values())
 		# TODO: include player host
 		logging.info('player %s joined', name)
-	
+
 	def unregister(self, name):
 		del self._players[name]
 		# TODO: include player host
@@ -96,7 +113,7 @@ class Player(Thread):
 
 	def __init__(self, server, sock):
 		# call the constructor of Thread
-		super().__init__(self)
+		super().__init__()
 
 		# indicate being a daemon thread
 		self.daemon = True
@@ -137,7 +154,7 @@ class Player(Thread):
 					# remainder are arguments
 					arguments = parts[1:]
 					# parse arguments into their corresponding values
-					arguments = protocol.PARSERS[command](arguments)
+					arguments = protocol.PARSERS[command](*arguments)
 					# remove the command, handles have no such argument
 					del arguments['command']
 
@@ -182,7 +199,7 @@ class Player(Thread):
 		self.send(protocol.detect(name, angle, distance, energy).values())
 
 	def handle_join(self, name):
-		if self.state is not PlayerState.WAITING:
+		if self.state is not PlayerState.VOID:
 			raise LoBotomyException(202)
 
 		try:
@@ -227,11 +244,11 @@ class Player(Thread):
 
 	def send_error(self, error):
 		logging.debug('client caused error %d', error)
-		self.send(protocol.error(error, protocol.ERRORS[error]))
+		self.send(protocol.error(error, protocol.ERRORS[error]).values())
 
-	def send(self, *arguments):
+	def send(self, command):
 		# send all data as strings separated by spaces, terminated by a newline
-		self._sock.sendall(' '.join(map(str, arguments)) + '\n')
+		self._sock.sendall(bytes(' '.join(map(str, command)) + '\n', 'utf-8'))
 
 	def shutdown(self):
 		# indicate a shutdown was
