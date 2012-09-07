@@ -59,9 +59,25 @@ class LoBotomyServer:
 	def run_game(self):
 		logging.info('game loop started')
 		while not self._shutdown:
-			# TODO: run a turn
+			# increment internal turn counter
+			self.turn_number += 1
+			# send all players a new turn command
+			for player in self._in_game:
+				if player.state is not PlayerState.DEAD:
+					# charge the player if they're not dead
+					energy = min(config.player.max_energy + config.player.turn_charge, 1.0)
+				else:
+					energy = 0.0
+				player.energy = energy
+
+				player.send(protocol.begin(self.turn_number, player.energy).values())
+
+			# wait the configured amount of time for players to submit commands
 			time.sleep(config.game.turn_duration / 1000)
-			logging.debug('slept like a baby...')
+
+			# send all players the end turn command
+			for player in self._in_game:
+				player.send(protocol.end().values())
 
 	def register(self, name, player):
 		if name in self._players:
@@ -82,7 +98,12 @@ class LoBotomyServer:
 		# TODO: include player host
 		logging.info('player %s joined', name)
 
-	def unregister(self, name):
+	def unregister(self, name, player):
+		# remove player from game if the player is in it
+		if player in self._in_game:
+			self._in_game.remove(player)
+
+		# remove player from online players
 		del self._players[name]
 		# TODO: include player host
 		logging.info('player %s left', name)
@@ -91,15 +112,25 @@ class LoBotomyServer:
 		if player.dead_turns > 0:
 			raise LoBotomyException(104)
 
+		self._in_game.append(player)
+
 		# TODO: perform spawn
 
 	def shutdown(self):
+		# avoid double shutdown
+		if self._shutdown:
+			return
+
 		# request shutdown in main loop
 		self._shutdown = True
 		logging.info('shutting down server')
 		# close the socket real good
-		self._ssock.shutdown(socket.SHUT_RDWR)
-		self._ssock.close()
+		try:
+			self._ssock.shutdown(socket.SHUT_RDWR)
+			self._ssock.close()
+		except:
+			# ignore at this point
+			pass
 
 # enumerate possible player states
 PlayerState = enum('VOID', 'WAITING', 'ACTING', 'DEAD')
@@ -248,16 +279,31 @@ class Player(Thread):
 
 	def send(self, command):
 		# send all data as strings separated by spaces, terminated by a newline
-		self._sock.sendall(bytes(' '.join(map(str, command)) + '\n', 'utf-8'))
+		try:
+			self._sock.sendall(bytes(' '.join(map(str, command)) + '\n', 'utf-8'))
+		except Exception as e:
+			logging.error('unexpected network error, client will crash: %s', str(e))
+			self.shutdown()
 
 	def shutdown(self):
-		# indicate a shutdown was
+		# avoid closing and unregistering twice
+		if self._shutdown:
+			return
+
+		# indicate a shutdown was requested
 		self._shutdown = True
 
 		logging.info('shutting down client')
 		# close socket
-		self._sock.shutdown(socket.SHUT_RDWR)
-		self._sock.close()
+		try:
+			self._sock.shutdown(socket.SHUT_RDWR)
+			self._sock.close()
+		except:
+			# ignore at this point
+			pass
 
-		# TODO: indicate shutdown at server
+		# unregister ourselves from the server if we were registered
+		# TODO: find better way of determining this
+		if not self.name.startswith('Thread-'):
+			self._server.unregister(self.name, self)
 
