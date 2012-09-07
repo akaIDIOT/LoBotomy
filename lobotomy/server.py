@@ -1,7 +1,9 @@
+# make sure flake8 ignores this file: flake8: noqa
+
 import socket
 from threading import Thread
 
-from lobotomy import LoBotomyException, protocol
+from lobotomy import config, LoBotomyException, protocol
 from lobotomy.util import enum
 
 class LoBotomyServer:
@@ -9,13 +11,14 @@ class LoBotomyServer:
 	Server for a LoBotomy game.
 	"""
 
-	def __init__(self, host = '', port = sum(map(ord, 'LoBotomyServer'))):
+	def __init__(self, host = config.host.address, port = config.host.port):
 		self.host = host
 		self.port = port
-	
-	def shutdown(self):
-		self._shutdown = True
-		self._ssock.close()
+		
+		# track online players by name
+		self._players = {}
+		# track players in game
+		self._in_game = []
 
 	def serve_forever(self):
 		self._ssock = socket.socket()
@@ -34,6 +37,31 @@ class LoBotomyServer:
 				Player(self, client).start()
 			except:
 				pass
+	
+	def register(self, name, player):
+		if name in self._players:
+			raise LoBotomyException(201)
+		
+		# register player
+		self._players[name] = player
+		# send welcome message
+		player.send(protocol.welcome(
+			protocol.VERSION, 
+			config.player.max_energy, 
+			config.player.turn_charge, 
+			config.game.turn_duration,
+			-1
+		))
+	
+	def unregister(self, name):
+		del self._players[name]
+	
+	def shutdown(self):
+		# request shutdown in main loop
+		self._shutdown = True
+		# close the socket real good
+		self._ssock.shutdown(socket.SHUT_RDWR)
+		self._ssock.close()
 
 # enumerate possible player states
 PlayerState = enum('VOID', 'WAITING', 'ACTING', 'DEAD')
@@ -170,7 +198,8 @@ class Player(Thread):
 		self._shutdown = True
 
 		# close socket
-		self._sock.shutdown()
+		self._sock.shutdown(socket.SHUT_RDWR)
 		self._sock.close()
 
 		# TODO: indicate shutdown at server
+
