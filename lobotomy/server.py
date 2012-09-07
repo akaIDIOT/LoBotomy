@@ -102,27 +102,28 @@ class Player(Thread):
 		try:
 			# read lines from the socket
 			for line in self._sock.makefile():
-				# split line on whitespace
-				parts = line.split()
-				# first word is the command
-				command = parts[0]
-				# remainder are arguments
-				arguments = parts[1:]
-				# parse arguments into their corresponding values
-				arguments = protocol.PARSERS[command](arguments)
-				# remove the command, handles have no such argument
-				del arguments['command']
+				try:
+					# split line on whitespace
+					parts = line.split()
+					# first word is the command
+					command = parts[0]
+					# remainder are arguments
+					arguments = parts[1:]
+					# parse arguments into their corresponding values
+					arguments = protocol.PARSERS[command](arguments)
+					# remove the command, handles have no such argument
+					del arguments['command']
 
-				# reaching this point, arguments have been successfully parsed (not validated)
+					# reaching this point, arguments have been successfully parsed (not validated)
 
-				# handle command
-				self._handlers[command](**arguments)
-		except LoBotomyException as e:
-			self.send_error(e.errno)
-		except KeyError as e:
-			self.send_error(301)
-		except ValueError as e:
-			self.send_error(302)
+					# handle command
+					self._handlers[command](**arguments)
+				except LoBotomyException as e:
+					self.send_error(e.errno)
+				except KeyError as e:
+					self.send_error(301)
+				except ValueError as e:
+					self.send_error(302)
 		except Exception as e:
 			if not self._shutdown:
 				# error occurred during regular operations
