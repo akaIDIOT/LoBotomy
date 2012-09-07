@@ -1,4 +1,5 @@
-# Make sure flake8 ignores this file: flake8: noqa
+# make sure flake8 ignores this file: flake8: noqa
+
 # current protocol version
 from collections import OrderedDict
 
@@ -110,15 +111,16 @@ error = command('error',
 	('message', str))
 
 def parse_msg(msg):
-	'''
+	"""
 	Parser helper function. Provide this with a message directly from the
 	socket and it will parse it using the correct function, returning
 	a dictionary containing parameters for the given protocol message,
 	including the message name
-	'''
+	"""
 	try:
 		chunks = msg.split()
 		return PARSERS[chunks[0]](*chunks[1:])
 	except Exception as e:
-		print(e)
-		return None
+		# TODO: think of something better to do here
+		return e
+
