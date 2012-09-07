@@ -1,5 +1,6 @@
 # make sure flake8 ignores this file: flake8: noqa
 
+import logging
 import socket
 from threading import Thread
 
@@ -21,11 +22,13 @@ class LoBotomyServer:
 		self._in_game = []
 
 	def serve_forever(self):
+		logging.debug('preparing network setup for serving at "%s:%d"', self.host, self.port)
 		self._ssock = socket.socket()
 		# bind a socket to the specified host and port
 		self._ssock.bind((self.host, self.port))
 		# make the socket listen for new connections
 		self._ssock.listen(5)
+		logging.info('succesfully bound to %s:%d, listening for clients', self.host, self.port)
 
 		self._shutdown = False
 
@@ -34,12 +37,19 @@ class LoBotomyServer:
 			try:
 				# accept a connection from a client
 				client, address = self._ssock.accept()
+				logging.info('client from %s connected', address[0])
 				Player(self, client).start()
-			except:
-				pass
+			except Exception as e:
+				if not self._shutdown:
+					# no an expected exception
+					logging.critical('unexpected network error, shutting down server: %s', str(e))
+		
+		# TODO: close all client threads (not all present in self._players())
 	
 	def register(self, name, player):
 		if name in self._players:
+			# TODO: include player host
+			logging.debug('player tried to register as %s, name is in use', name)
 			raise LoBotomyException(201)
 		
 		# register player
@@ -52,13 +62,18 @@ class LoBotomyServer:
 			config.game.turn_duration,
 			-1
 		))
+		# TODO: include player host
+		logging.info('player %s joined', name)
 	
 	def unregister(self, name):
 		del self._players[name]
+		# TODO: include player host
+		logging.info('player %s left', name)
 	
 	def shutdown(self):
 		# request shutdown in main loop
 		self._shutdown = True
+		logging.info('shutting down server')
 		# close the socket real good
 		self._ssock.shutdown(socket.SHUT_RDWR)
 		self._ssock.close()
@@ -127,7 +142,7 @@ class Player(Thread):
 		except Exception as e:
 			if not self._shutdown:
 				# error occurred during regular operations
-				# TODO: log error
+				logging.error('unexpected network error, client will crash: %s', str(e))
 				self.shutdown()
 
 	def signal_begin(self, turn_number, energy):
@@ -188,6 +203,7 @@ class Player(Thread):
 		self.scan = (radius,)
 
 	def send_error(self, error):
+		logging.debug('client caused error %d', error)
 		self.send(protocol.error(error, protocol.ERRORS[error]))
 
 	def send(self, *arguments):
@@ -198,6 +214,7 @@ class Player(Thread):
 		# indicate a shutdown was
 		self._shutdown = True
 
+		logging.info('shutting down client')
 		# close socket
 		self._sock.shutdown(socket.SHUT_RDWR)
 		self._sock.close()
