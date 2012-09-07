@@ -11,6 +11,8 @@ class host:
 class game:
 	# turn length, time in ms the server will wait before executing a turn
 	turn_duration = 5000
+	# internal battle field size
+	field_dimensions = (2.0, 2.0)
 
 # store player settings
 class player:

@@ -69,7 +69,13 @@ class LoBotomyServer:
 		del self._players[name]
 		# TODO: include player host
 		logging.info('player %s left', name)
-	
+
+	def request_spawn(self, player):
+		if player.dead_turns > 0:
+			raise LoBotomyException(104)
+
+		# TODO: perform spawn
+
 	def shutdown(self):
 		# request shutdown in main loop
 		self._shutdown = True
@@ -109,9 +115,15 @@ class Player(Thread):
 
 		self.state = PlayerState.VOID
 
+		# actions requested by the client
 		self.move = None
 		self.fire = None
 		self.scan = None
+
+		# game state variables
+		self.location = (None, None)
+		self.energy = 0.0
+		self.dead_turns = 0
 
 	def run(self):
 		try:
@@ -173,13 +185,24 @@ class Player(Thread):
 		if self.state is not PlayerState.WAITING:
 			raise LoBotomyException(202)
 
-		self.state = PlayerState.DEAD
+		try:
+			# attempt to register client with server
+			self._server.register(name, self)
+			# no exception, we're good (real good!)
+			self.name = name
+			self.state = PlayerState.DEAD
+		except LoBotomyError as e:
+			self.send_error(e.errno)
 
 	def handle_spawn(self):
 		if self.state is not PlayerState.DEAD:
 			raise LoBotomyException(202)
 
-		self.state = PlayerState.WAITING
+		try:
+			self._server.request_spawn(self)
+			self.state = PlayerState.WAITING
+		except LoBotomyError as e:
+			self.send_error(e.errno)
 
 	def handle_move(self, direction, distance):
 		if self.state is not PlayerState.ACTING:
