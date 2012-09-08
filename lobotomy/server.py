@@ -6,7 +6,7 @@ from threading import Thread
 import time
 
 from lobotomy import config, LoBotomyException, protocol
-from lobotomy.util import enum
+from lobotomy.util import enum, distance
 
 class LoBotomyServer:
 	"""
@@ -83,7 +83,7 @@ class LoBotomyServer:
 			self.execute_fires(filter(lambda p: p.fire is not None, self._players))
 
 			# execute all requested scan actions
-			self.execute_scans(filter(lambda p: p.scan is not None, self._players))
+			self.execute_scans(filter(lambda p: p.scan is not None, self._players), self._players)
 
 			# send all players the end turn command
 			for player in self._in_game:
@@ -104,8 +104,18 @@ class LoBotomyServer:
 	def execute_fires(players):
 		pass
 
-	def execute_scans(players):
-		pass
+	def execute_scans(players, subjects):
+		for player in players:
+			(radius,) = player.scan
+			for subject in subjects:
+				distance = distance(player.location, subject.location)
+				if distance <= radius:
+					player.signal_detect(
+					        subject.name,
+					        angle(player.location, subject.location),
+					        distance,
+					        subject.energy
+					)
 
 	def register(self, name, player):
 		if name in self._players:
@@ -140,9 +150,12 @@ class LoBotomyServer:
 		if player.dead_turns > 0:
 			raise LoBotomyException(104)
 
-		self._in_game.append(player)
+		# set player start values
+		player.energy = config.player.max_energy
+		lim_x, lim_y = config.game.field_dimensions
+		player.location = (random.random() * lim_x, random.random() * lim_y)
 
-		# TODO: perform spawn
+		self._in_game.append(player)
 
 	def shutdown(self):
 		# avoid double shutdown
