@@ -49,12 +49,12 @@ class LoBotomyServer:
 					Player(self, client).start()
 				except Exception as e:
 					if not self._shutdown:
-						# no an expected exception
+						# not an expected exception
 						logging.critical('unexpected network error, shutting down server: %s', str(e))
 		except Exception as e:
 			logging.critical('unexpected error: %s', str(e))
 
-		# TODO: close all client threads (not all present in self._players())
+		# TODO: close all client threads (not all present in self._players)
 
 	def run_game(self):
 		logging.info('game loop started')
@@ -72,6 +72,10 @@ class LoBotomyServer:
 
 			# wait the configured amount of time for players to submit commands
 			time.sleep(config.game.turn_duration / 1000)
+
+			# TODO: execute all requested move actions
+			# TODO: execute all requested fire actions
+			# TODO: execute all requested scan actions
 
 			# send all players the end turn command
 			for player in self._in_game:
@@ -304,4 +308,3 @@ class Player(Thread):
 		# TODO: find better way of determining this
 		if not self.name.startswith('Thread-'):
 			self._server.unregister(self.name, self)
-
