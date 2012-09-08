@@ -61,16 +61,14 @@ class LoBotomyServer:
 		while not self._shutdown:
 			# increment internal turn counter
 			self.turn_number += 1
-			# send all players a new turn command
+			# send all alive players a new turn command
 			for player in self._in_game:
-				if player.state is not PlayerState.DEAD:
-					# charge the player if they're not dead
-					energy = min(config.player.max_energy + config.player.turn_charge, 1.0)
-				else:
-					energy = 0.0
-				player.energy = energy
-
+				player.energy = min(config.player.max_energy + config.player.turn_charge, 1.0)
 				player.send(protocol.begin(self.turn_number, player.energy).values())
+
+			# decrement wait counters for dead players
+			for player in filter(lambda p: p.state is PlayerState.DEAD, self._players):
+				player.dead_turns -= 1
 
 			# wait the configured amount of time for players to submit commands
 			time.sleep(config.game.turn_duration / 1000)
