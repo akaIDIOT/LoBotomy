@@ -61,6 +61,9 @@ class LoBotomyServer:
 		while not self._shutdown:
 			# increment internal turn counter
 			self.turn_number += 1
+
+			# FIXME: iterating over ALL the players time and time again must be slow
+
 			# send all alive players a new turn command
 			for player in self._in_game:
 				player.energy = min(config.player.max_energy + config.player.turn_charge, 1.0)
@@ -73,13 +76,27 @@ class LoBotomyServer:
 			# wait the configured amount of time for players to submit commands
 			time.sleep(config.game.turn_duration / 1000)
 
-			# TODO: execute all requested move actions
-			# TODO: execute all requested fire actions
-			# TODO: execute all requested scan actions
+			# execute all requested move actions
+			self.execute_moves(filter(lambda p: p.move is not None, self._players))
+
+			# execute all requested fire actions
+			self.execute_fires(filter(lambda p: p.fire is not None, self._players))
+
+			# execute all requested scan actions
+			self.execute_scans(filter(lambda p: p.scan is not None, self._players))
 
 			# send all players the end turn command
 			for player in self._in_game:
 				player.send(protocol.end().values())
+
+	def execute_moves(players):
+		pass
+
+	def execute_fires(players):
+		pass
+
+	def execute_scans(players):
+		pass
 
 	def register(self, name, player):
 		if name in self._players:
