@@ -1,12 +1,13 @@
 # make sure flake8 ignores this file: flake8: noqa
 
 import logging
+import random
 import socket
 from threading import Thread
 import time
 
 from lobotomy import config, LoBotomyException, protocol
-from lobotomy.util import enum, distance
+from lobotomy.util import enum, angle, distance
 
 class LoBotomyServer:
 	"""
