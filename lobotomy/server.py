@@ -90,7 +90,16 @@ class LoBotomyServer:
 				player.send(protocol.end().values())
 
 	def execute_moves(players):
-		pass
+		for player in players:
+			# unpack required inforation
+			direction, distance = player.move
+			x, y = player.location
+			lim_x, lim_y = config.game.field_dimensions
+			# calculate new values
+			x = (x + cos(direction) * distance) % lim_x
+			y = (y + sin(direction) * distance) % lim_y
+			# save new location
+			player.location = (x, y)
 
 	def execute_fires(players):
 		pass
