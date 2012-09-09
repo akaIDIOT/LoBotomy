@@ -8,9 +8,9 @@ VERSION = 0
 # predefine error codes
 # TODO: store error codes in constants
 ERRORS = {
-	101: 'move impossible, not enough energy',
-	102: 'fire impossible, not enough energy',
-	103: 'scan impossible, not enough energy',
+	101: 'move impossible, costs more than max energy',
+	102: 'fire impossible, costs more than max energy',
+	103: 'scan impossible, costs more than max energy',
 	104: 'action impossible, you are dead',
 
 	201: 'name taken, choose another one',
@@ -18,7 +18,7 @@ ERRORS = {
 
 	301: 'unrecognized or unsupported command',
 	302: 'invalid command',
-	}
+}
 
 # store message parsers by their command string
 PARSERS = {}
@@ -59,7 +59,8 @@ welcome = command('welcome',
 	('energy', float),
 	('charge', float),
 	('turn_duration', int),
-	('turns_left', int))
+	('turns_left', int)
+)
 
 # spawn command, format: spawn
 spawn = command('spawn')
@@ -67,23 +68,27 @@ spawn = command('spawn')
 # begin command, format: begin <turn_number> <energy>
 begin = command('begin',
 	('turn_number', int),
-	('energy', float))
+	('energy', float)
+)
 
 # move command, format: move <angle> <distance>
 move = command('move',
 	('angle', float),
-	('distance', float))
+	('distance', float)
+)
 
-# fire command, format: fire <angle> <distance> <radius> <yield>
+# fire command, format: fire <angle> <distance> <radius> <charge>
 fire = command('fire',
 	('angle', float),
 	('distance', float),
 	('radius', float),
-	('yield', float))
+	('charge', float)
+)
 
 # scan command, format: scan <radius>
 scan = command('scan',
-	('radius', float))
+	('radius', float)
+)
 
 # end command, format: end
 end = command('end')
@@ -92,23 +97,27 @@ end = command('end')
 hit = command('hit',
 	('name', str),
 	('angle', float),
-	('charge', float))
+	('charge', float)
+)
 
 # death command, format: death <turns>
 death = command('death',
-	('turns', int))
+	('turns', int)
+)
 
 # detect command, format: detect <name> <angle> <distance> <energy>
 detect = command('detect',
 	('name', str),
 	('angle', float),
 	('distance', float),
-	('energy', float))
+	('energy', float)
+)
 
 # error command, format: error <error_number> <explanation>
 error = command('error',
 	('errno', int),
-	('message', str))
+	('message', str)
+)
 
 def parse_msg(msg):
 	"""

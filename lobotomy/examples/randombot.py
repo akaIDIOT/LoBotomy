@@ -135,7 +135,7 @@ class ExampleBot:
 			cmd += str(random.random() * 2 * math.pi) + ' ' # angle
 			cmd += str(random.random() * 0.2 * self.energy) + ' ' # distance
 			cmd += str(random.random() * 0.1 * self.energy) + ' ' # radius
-			cmd += str(random.random() * 0.1 * self.energy) # yield
+			cmd += str(random.random() * 0.1 * self.energy) # charge
 			cmds.append(cmd)
 		# Think of scan
 		if random.randint(0, 1):
