@@ -144,6 +144,12 @@ class Region:
 			# remove children from self
 			self.children = tuple()
 
+			# indicate a merge was done on this region
+			return True
+
+		# indicate no merge was needed
+		return False
+
 	def __contains__(self, point):
 		"""
 		Returns whether the point is within the bounds of this region.
@@ -187,8 +193,8 @@ class Region:
 		else:
 			(match, *_) = [region for region in self.children if point in region]
 			if match.remove(point):
-				# check for possible merge if direct child removed a point
-				self.merge()
+				# check for possible merge if direct child removed a point (and possibly bubble merge)
+				return self.merge()
 			# indicate that no point was removed from this region (parent need not check for merge)
 			return False
 
