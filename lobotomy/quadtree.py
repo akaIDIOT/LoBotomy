@@ -27,7 +27,6 @@ class QuadTree:
 		self.root.add(point)
 
 	def add_all(self, points):
-		print(points)
 		for point in points:
 			self.add(point)
 
@@ -86,8 +85,8 @@ class Region:
 		return len(self.children) is 0
 
 	def overlaps(self, region):
-		((a_lx, a_ty), (a_rx, a_by)) = self.bounds
-		((b_lx, b_ty), (b_rx, b_by)) = region.bounds
+		(a_lx, a_ty, a_rx, a_by) = self.bounds
+		(b_lx, b_ty, b_rx, b_by) = region.bounds
 
 		# no overlap if any of the conditions is false
 		# see http://stackoverflow.com/questions/306316/determine-if-two-rectangles-overlap-each-other
@@ -97,40 +96,28 @@ class Region:
 		# split required if region contains more than 4 points, split is required
 		if len(self.points) > 4:
 			# calculate own width and height
-			((tl_x, tl_y), (br_x, br_y)) = self.bounds
+			(tl_x, tl_y, br_x, br_y) = self.bounds
 			width = br_x - tl_x
 			height = br_y - tl_y
 
 			# create top left subregion
-			tl_region = Region((
-				(tl_x, tl_y),
-				(tl_x + width / 2, tl_y + height / 2)
-			), self)
+			tl_region = Region((tl_x, tl_y, tl_x + width / 2, tl_y + height / 2), self)
 			tl_region.add_all(point for point in self.points if point in tl_region)
 
 			# create top right subregion
-			tr_region = Region((
-				(tl_x + width / 2, tl_y),
-				(br_x, tl_y + height / 2)
-			), self)
+			tr_region = Region((tl_x + width / 2, tl_y, br_x, tl_y + height / 2), self)
 			tr_region.add_all(point for point in self.points if point in tr_region)
 
 			# create bottom left subregion
-			bl_region = Region((
-				(tl_x, tl_y + height / 2),
-				(tl_x + width / 2, br_y)
-			), self)
+			bl_region = Region((tl_x, tl_y + height / 2,tl_x + width / 2, br_y), self)
 			bl_region.add_all(point for point in self.points if point in bl_region)
 
 			# create bottom right subregion
-			br_region = Region((
-				(tl_x + width / 2, tl_y + height / 2),
-				(br_x, br_y)
-			), self)
+			br_region = Region((tl_x + width / 2, tl_y + height / 2, br_x, br_y), self)
 			br_region.add_all(point for point in self.points if point in br_region)
 
 			# set new internal state
-			self.children = [tl_region, tr_region, bl_region, br_region]
+			self.children = (tl_region, tr_region, bl_region, br_region)
 			self.points = set()
 
 	def merge(self):
@@ -150,7 +137,7 @@ class Region:
 				point.region = self
 
 			# remove children from self
-			self.children = []
+			self.children = tuple()
 
 	def __contains__(self, point):
 		"""
@@ -158,7 +145,7 @@ class Region:
 
 		TODO: figure out if using < for the 'upper' bound will be a problem.
 		"""
-		return self.bounds[0][0] <= point.x < self.bounds[1][0] and self.bounds[0][1] <= point.y < self.bounds[1][1]
+		return self.bounds[0] <= point.x < self.bounds[2] and self.bounds[1] <= point.y < self.bounds[3]
 
 	def add(self, point):
 		if point not in self:
@@ -205,13 +192,13 @@ class Region:
 		return self
 
 	def __repr__(self):
-		((lx, ty), (rx, by)) = self.bounds
-		return self.__class__.__name__ + '(({0}, {1}), ({2}, {3}))'.format(lx, ty, rx, by)
+		(lx, ty, rx, by) = self.bounds
+		return self.__class__.__name__ + str(self.bounds)
 
 # TODO: turn into some clever extension of namedtuple of length 2 to allow regular unpacking
 class Point:
 	"""
-	Quadtree entry, represented by x and y coordinates.
+	Quadtree entry, represented by x and y coordinates and a containing region.
 	"""
 	def __init__(self, x, y):
 		self.region = None
@@ -236,6 +223,7 @@ class Point:
 
 		# traversed past the root
 		if region is None:
+			# FIXME: raising an exception at this point will break the tree, internal state was changed
 			raise Exception('point not in tree bounds')
 
 		# traverse down the tree, choosing the child region that fits every step
