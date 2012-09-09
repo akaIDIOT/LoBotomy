@@ -188,5 +188,32 @@ class Point:
 		if not self.region:
 			raise Exception('not in tree') # TODO: better error
 
-		pass
+		# save reference to old region
+		old_region = self.region
+		# use current region as starting point
+		region = self.region
+		# update state
+		self.x, self.y = to
+
+		# traverse up the tree to a region that can contain self
+		while self not in region and region is not None:
+			region = region.parent
+
+		# traversed past the root
+		if region is None:
+			raise Exception('point not in tree bounds')
+
+		# traverse down the tree, choosing the child region that fits every step
+		while not region.is_leaf:
+			(region, *_) = [region for region in region.children if self in region]
+
+		# region is now a leaf region that can store self
+
+		# 'move' the point from old region to new
+		old_region.points.remove(self)
+		region.points.add(self)
+
+		# rebalance the tree by merging old and splitting new regions
+		old_region.merge()
+		region.split()
 
