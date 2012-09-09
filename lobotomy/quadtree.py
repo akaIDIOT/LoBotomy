@@ -199,7 +199,6 @@ class Region:
 		return self
 
 	def __repr__(self):
-		(lx, ty, rx, by) = self.bounds
 		return self.__class__.__name__ + str(self.bounds)
 
 # TODO: turn into some clever extension of namedtuple of length 2 to allow regular unpacking
