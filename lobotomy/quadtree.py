@@ -21,14 +21,13 @@ class QuadTree:
 		specified points.
 		"""
 		self.root = Region(dimensions)
-
-		for point in points:
-			self.add(point)
+		self.add_all(points)
 
 	def add(self, point):
 		self.root.add(point)
 
 	def add_all(self, points):
+		print(points)
 		for point in points:
 			self.add(point)
 
@@ -42,7 +41,7 @@ class QuadTree:
 					points = set()
 					# recurse to all leaf notes, collect points from them
 					for region in region.children:
-						points.union(collect_points(region))
+						points = points.union(collect_points(region, bounds))
 
 					# return all matched points
 					return points
@@ -102,14 +101,12 @@ class Region:
 			width = br_x - tl_x
 			height = br_y - tl_y
 
-			# FIXME: __in__ matching could put points in multiple regions
-
 			# create top left subregion
 			tl_region = Region((
 				(tl_x, tl_y),
 				(tl_x + width / 2, tl_y + height / 2)
 			), self)
-			tl_region.add_all(point for point in self.points if point in rl_region)
+			tl_region.add_all(point for point in self.points if point in tl_region)
 
 			# create top right subregion
 			tr_region = Region((
@@ -123,14 +120,14 @@ class Region:
 				(tl_x, tl_y + height / 2),
 				(tl_x + width / 2, br_y)
 			), self)
-			rl_region.add_all(point for point in self.points if point in rl_region)
+			bl_region.add_all(point for point in self.points if point in bl_region)
 
 			# create bottom right subregion
 			br_region = Region((
 				(tl_x + width / 2, tl_y + height / 2),
 				(br_x, br_y)
 			), self)
-			br_region.add_all(point for point in self.point if point in br_region)
+			br_region.add_all(point for point in self.points if point in br_region)
 
 			# set new internal state
 			self.children = [tl_region, tr_region, bl_region, br_region]
@@ -155,7 +152,7 @@ class Region:
 			# remove children from self
 			self.children = []
 
-	def __in__(self, point):
+	def __contains__(self, point):
 		"""
 		Returns whether the point is within the bounds of this region.
 
@@ -207,6 +204,10 @@ class Region:
 
 		return self
 
+	def __repr__(self):
+		((lx, ty), (rx, by)) = self.bounds
+		return self.__class__.__name__ + '(({0}, {1}), ({2}, {3}))'.format(lx, ty, rx, by)
+
 # TODO: turn into some clever extension of namedtuple of length 2 to allow regular unpacking
 class Point:
 	"""
@@ -250,4 +251,7 @@ class Point:
 		# rebalance the tree by merging old and splitting new regions
 		old_region.merge()
 		region.split()
+
+	def __repr__(self):
+		return self.__class__.__name__ + '({0}, {1})'.format(self.x, self.y)
 
