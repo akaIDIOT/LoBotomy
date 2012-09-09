@@ -6,8 +6,8 @@ import socket
 from threading import Thread
 import time
 
-from lobotomy import config, LoBotomyException, protocol
-from lobotomy.util import enum, angle, distance
+from lobotomy import config, LoBotomyException, protocol, util
+from lobotomy.util import enum
 
 class LoBotomyServer:
 	"""
@@ -71,20 +71,20 @@ class LoBotomyServer:
 				player.send(protocol.begin(self.turn_number, player.energy).values())
 
 			# decrement wait counters for dead players
-			for player in filter(lambda p: p.state is PlayerState.DEAD, self._players):
+			for player in filter(lambda p: p.state is PlayerState.DEAD, self._players.values()):
 				player.dead_turns -= 1
 
 			# wait the configured amount of time for players to submit commands
 			time.sleep(config.game.turn_duration / 1000)
 
 			# execute all requested move actions
-			self.execute_moves(filter(lambda p: p.move is not None, self._players))
+			self.execute_moves(filter(lambda p: p.move is not None, self._in_game))
 
 			# execute all requested fire actions
-			self.execute_fires(filter(lambda p: p.fire is not None, self._players))
+			self.execute_fires(filter(lambda p: p.fire is not None, self._in_game), self._in_game)
 
 			# execute all requested scan actions
-			self.execute_scans(filter(lambda p: p.scan is not None, self._players), self._players)
+			self.execute_scans(filter(lambda p: p.scan is not None, self._in_game), self._in_game)
 
 			# send all players the end turn command
 			for player in self._in_game:
@@ -93,27 +93,54 @@ class LoBotomyServer:
 	def execute_moves(players):
 		for player in players:
 			# unpack required inforation
-			direction, distance = player.move
+			angle, distance = player.move
 			x, y = player.location
 			lim_x, lim_y = config.game.field_dimensions
 			# calculate new values
-			x = (x + cos(direction) * distance) % lim_x
-			y = (y + sin(direction) * distance) % lim_y
-			# save new location
+			x = (x + cos(angle) * distance) % lim_x
+			y = (y + sin(angle) * distance) % lim_y
+			# save new player state
+			# TODO: subtract energy cost (and signal death if it proved fatal)
 			player.location = (x, y)
 
-	def execute_fires(players):
-		pass
+	def execute_fires(players, subjects):
+		# TODO: account for world wrapping
+		for player in players:
+			# unpack required information
+			(angle, distance, radius, charge) = player.fire
+			loc_x, loc_y = player.location
+			lim_x, lim_y = config.game.field_dimensions
+			# calculate the epicenter of the blast
+			epicenter = (
+				(loc_x + cos(angle) * distance) % lim_x,
+				(loc_y + sin(angle) * distance) % lim_y
+			)
+
+			# TODO: subtract energy cost (and signal death if it proved fatal)
+
+			for subject in subjects:
+				# calculate distance to epicenter for all subjects, signal hit if ... hit
+				if util.distance(epicenter, subject.location) <= radius:
+					subject.signal_hit(
+						player.name,
+						util.angle(subject.location, epicenter),
+						charge
+					)
 
 	def execute_scans(players, subjects):
+		# TODO: account for world wrapping
 		for player in players:
 			(radius,) = player.scan
+
+			# TODO: subtract energy cost (and signal death if it proved fatal)
+
 			for subject in subjects:
-				distance = distance(player.location, subject.location)
+				# calculate distance to all subjects, signal detect if within scan
+				distance = util.distance(player.location, subject.location)
 				if distance <= radius:
 					player.signal_detect(
 					        subject.name,
-					        angle(player.location, subject.location),
+					        util.angle(player.location, subject.location),
 					        distance,
 					        subject.energy
 					)
