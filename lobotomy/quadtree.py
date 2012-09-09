@@ -102,24 +102,40 @@ class Region:
 			self.children = [tl_region, tr_region, bl_region, br_region]
 			self.points = set()
 
+	def merge(self):
+		# merge required if not a leaf but contains 4 or less points
+		if not self.is_leaf and len(self) <= 4:
+			for region in self.children:
+				# tell the subregions to merge ('issue' could be recursive with 3 out of 4 subregions being empty)
+				region.merge()
+				# move all points from subregion to self
+				self.points = self.points.union(region.points)
+				# remove state from subregion
+				region.parent = None
+				region.points = set()
+
+			# remove children from self
+			self.children = []
+
 	def __in__(self, point):
 		"""
 		Returns whether the point is within the bounds of this region.
 
 		TODO: figure out if using < for the 'upper' bound will be a problem.
 		"""
-		return point.x >= self.bounds[0][0]
-			and point.x < self.bounds[1][0]
+		return  point.x >= self.bounds[0][0]
+			and point.x <  self.bounds[1][0]
 			and point.y >= self.bounds[0][1]
-			and point.y < self.bounds[1][1]
+			and point.y <  self.bounds[1][1]
 
 	def add(self, point):
 		if point not in self:
 			raise Exception('point not in region') # TODO: better error
 
-		if self.is_leaf():
+		if self.is_leaf:
 			point.region = self
 			self.points.add(point)
+			# split self if required
 			self.split()
 		else:
 			# get the first match (should be the only one), save the rest in _
@@ -133,6 +149,26 @@ class Region:
 	def add_all(self, points):
 		for point in points:
 			self.add(point)
+
+		return self
+
+	def remove(self, point):
+		if point not in self:
+			raise Exception('point not in region') # TODO: better error
+
+		if self.is_leaf:
+			self.points.remove(point)
+			# merge self if required
+			self.merge()
+		else:
+			(match, *_) = [region for region in self.children if point in region]
+			match.remove(point)
+
+		return self
+
+	def remove_all(self, points):
+		for point in points:
+			self.remove(point)
 
 		return self
 
