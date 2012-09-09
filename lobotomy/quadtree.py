@@ -32,7 +32,33 @@ class QuadTree:
 		for point in points:
 			self.add(point)
 
-# TODO: tuen into some clever extension of tuple of length 4 to allow subregion indexing
+	def find_all(self, bounds):
+		def collect_points(region, bounds):
+			if region.overlaps(bounds):
+				if region.is_leaf:
+					# leaf region overlaps, return its points
+					return region.points
+				else:
+					points = set()
+					# recurse to all leaf notes, collect points from them
+					for region in region.children:
+						points.union(collect_points(region))
+
+					# return all matched points
+					return points
+			else:
+				# region does not overlap with bounds, return no points from it
+				return set()
+
+		# define a region representing the given bounds
+		bounds = Region(bounds)
+		# collect all matching points
+		points = collect_points(self.root, bounds)
+
+		# return a list representation of the final set of collected points
+		return list(point for point in points if point in bounds)
+
+# TODO: turn into some clever extension of tuple of length 4 to allow subregion indexing
 class Region:
 	"""
 	Index region withing a QuadTree, containing either child regions or leaves
@@ -59,6 +85,14 @@ class Region:
 	@property
 	def is_leaf(self):
 		return len(self.children) is 0
+
+	def overlaps(self, region):
+		((a_lx, a_ty), (a_rx, a_by)) = self.bounds
+		((b_lx, b_ty), (b_rx, b_by)) = region.bounds
+
+		# no overlap if any of the conditions is false
+		# see http://stackoverflow.com/questions/306316/determine-if-two-rectangles-overlap-each-other
+		return a_lx < b_rx and a_rx > b_lx and a_ty < b_by and a_by > b_ty
 
 	def split(self):
 		# split required if region contains more than 4 points, split is required
