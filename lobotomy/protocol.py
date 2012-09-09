@@ -34,8 +34,7 @@ def command(name, *types):
 			# create a list of the command's name and all the arguments
 			# coerced to their respective types
 			values = OrderedDict(command = name)
-			for i in range(len(types)):
-				arg_name, arg_type = types[i]
+			for (i, (arg_name, arg_type)) in enumerate(types):
 				values[arg_name] = arg_type(arguments[i])
 
 			return values
