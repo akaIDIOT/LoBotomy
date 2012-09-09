@@ -15,7 +15,7 @@ class QuadTree:
 	they can be moved by walking the tree to their new location.
 	"""
 
-	def __init__(self, dimensions, *points)
+	def __init__(self, dimensions, *points):
 		"""
 		Creates a new QuadTree spanning the given dimensions, containing the
 		specified points.
@@ -123,10 +123,7 @@ class Region:
 
 		TODO: figure out if using < for the 'upper' bound will be a problem.
 		"""
-		return  point.x >= self.bounds[0][0]
-			and point.x <  self.bounds[1][0]
-			and point.y >= self.bounds[0][1]
-			and point.y <  self.bounds[1][1]
+		return point.x >= self.bounds[0][0] and point.x < self.bounds[1][0] and point.y >= self.bounds[0][1] and point.y < self.bounds[1][1]
 
 	def add(self, point):
 		if point not in self:
