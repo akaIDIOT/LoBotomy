@@ -114,6 +114,10 @@ class Region:
 				region.parent = None
 				region.points = set()
 
+			# update back reference of point to region
+			for point in self.points:
+				point.region = self
+
 			# remove children from self
 			self.children = []
 
@@ -123,7 +127,7 @@ class Region:
 
 		TODO: figure out if using < for the 'upper' bound will be a problem.
 		"""
-		return point.x >= self.bounds[0][0] and point.x < self.bounds[1][0] and point.y >= self.bounds[0][1] and point.y < self.bounds[1][1]
+		return self.bounds[0][0] <= point.x < self.bounds[1][0] and self.bounds[0][1] <= point.y < self.bounds[1][1]
 
 	def add(self, point):
 		if point not in self:
