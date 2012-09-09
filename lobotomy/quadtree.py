@@ -68,6 +68,11 @@ class Region:
 		"""
 		Creates a new Region spanning the given dimensions.
 		"""
+		(tl_x, tl_y, br_x, br_y) = bounds
+		# do a sanity test on the bounds argument
+		if tl_x > br_x or tl_y > br_y:
+			raise ValueError('not a valid rectangle: ' + str(bounds))
+
 		self.bounds = bounds
 		self.parent = parent
 		self.children = []
@@ -109,7 +114,7 @@ class Region:
 			tr_region.add_all(point for point in self.points if point in tr_region)
 
 			# create bottom left subregion
-			bl_region = Region((tl_x, tl_y + height / 2,tl_x + width / 2, br_y), self)
+			bl_region = Region((tl_x, tl_y + height / 2, tl_x + width / 2, br_y), self)
 			bl_region.add_all(point for point in self.points if point in bl_region)
 
 			# create bottom right subregion
@@ -177,13 +182,15 @@ class Region:
 
 		if self.is_leaf:
 			self.points.remove(point)
-			# merge self if required
-			self.merge()
+			# indicate that a point was removed from this leaf (parent should check for merge)
+			return True
 		else:
 			(match, *_) = [region for region in self.children if point in region]
-			match.remove(point)
-
-		return self
+			if match.remove(point):
+				# check for possible merge if direct child removed a point
+				self.merge()
+			# indicate that no point was removed from this region (parent need not check for merge)
+			return False
 
 	def remove_all(self, points):
 		for point in points:
@@ -200,6 +207,7 @@ class Point:
 	"""
 	Quadtree entry, represented by x and y coordinates and a containing region.
 	"""
+
 	def __init__(self, x, y):
 		self.region = None
 
