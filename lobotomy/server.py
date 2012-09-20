@@ -6,7 +6,8 @@ import socket
 from threading import Thread
 import time
 
-from lobotomy import config, LoBotomyException, protocol, util
+from lobotomy import config, game, LoBotomyException, protocol, util
+from lobotomy.quadtree import QuadTree
 from lobotomy.util import enum
 
 class LoBotomyServer:
@@ -14,7 +15,11 @@ class LoBotomyServer:
 	Server for a LoBotomy game.
 	"""
 
-	def __init__(self, host = config.host.address, port = config.host.port):
+	def __init__(self, field_dimensions = config.game.field_dimensions, host = config.host.address, port = config.host.port):
+		# create battlefield
+		self.width, self.height = field_dimensions
+		self.field = QuadTree((0, 0, self.width, self.height))
+
 		self.host = host
 		self.port = port
 
@@ -34,7 +39,6 @@ class LoBotomyServer:
 			# make the socket listen for new connections
 			self._ssock.listen(5)
 			logging.info('succesfully bound to %s:%d, listening for clients', self.host, self.port)
-
 
 			self._shutdown = False
 
@@ -99,9 +103,10 @@ class LoBotomyServer:
 			# calculate new values
 			x = (x + cos(angle) * distance) % lim_x
 			y = (y + sin(angle) * distance) % lim_y
+			# subtract energy cost
+			player.energy -= game.move_cost(distance)
 			# save new player state
-			# TODO: subtract energy cost (and signal death if it proved fatal)
-			player.location = (x, y)
+			player.move((x, y))
 
 	def execute_fires(players, subjects):
 		# TODO: account for world wrapping
