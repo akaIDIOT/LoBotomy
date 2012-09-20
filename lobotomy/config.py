@@ -13,6 +13,8 @@ class game:
 	turn_duration = 5000
 	# internal battle field size
 	field_dimensions = (2.0, 2.0)
+	# number of turns a player is kept dead
+	dead_turns = 5
 
 # store player settings
 class player:
