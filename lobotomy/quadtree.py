@@ -56,6 +56,9 @@ class QuadTree:
 		# return a list representation of the final set of collected points
 		return list(point for point in points if point in bounds)
 
+	def remove(self, point):
+		self.root.remove(point)
+
 # TODO: turn into some clever extension of tuple of length 4 to allow subregion indexing
 class Region:
 	"""
