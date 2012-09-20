@@ -7,7 +7,7 @@ from threading import Thread
 import time
 
 from lobotomy import config, game, LoBotomyException, protocol, util
-from lobotomy.quadtree import QuadTree
+from lobotomy.quadtree import Point, QuadTree
 from lobotomy.util import enum
 
 class LoBotomyServer:
@@ -82,53 +82,57 @@ class LoBotomyServer:
 			time.sleep(config.game.turn_duration / 1000)
 
 			# execute all requested move actions
-			self.execute_moves(filter(lambda p: p.move is not None, self._in_game))
+			self.execute_moves(filter(lambda p: p.move_action is not None, self._in_game))
 
 			# execute all requested fire actions
-			self.execute_fires(filter(lambda p: p.fire is not None, self._in_game), self._in_game)
+			self.execute_fires(filter(lambda p: p.fire_action is not None, self._in_game), self._in_game)
 
 			# execute all requested scan actions
-			self.execute_scans(filter(lambda p: p.scan is not None, self._in_game), self._in_game)
+			self.execute_scans(filter(lambda p: p.scan_action is not None, self._in_game), self._in_game)
+
+			# remove all dead players from the battlefield
+			for player in filter(lambda p: p.state is PlayerState.DEAD, self._in_game):
+				self.field.remove(player)
 
 			# send all players the end turn command
 			for player in self._in_game:
-				player.send(protocol.end().values())
+				player.signal_end()
 
 	def execute_moves(players):
 		for player in players:
 			# unpack required inforation
-			angle, distance = player.move
-			x, y = player.location
-			lim_x, lim_y = config.game.field_dimensions
+			angle, distance = player.move_action
 			# calculate new values
-			x = (x + cos(angle) * distance) % lim_x
-			y = (y + sin(angle) * distance) % lim_y
+			x = (player.x + cos(angle) * distance) % self.width
+			y = (player.y + sin(angle) * distance) % self.height
 			# subtract energy cost
 			player.energy -= game.move_cost(distance)
-			# save new player state
-			player.move((x, y))
+			if player.energy <= 0.0:
+				# signal player is dead
+				player.signal_death(config.player.dead_turns)
+			else:
+				# move player on the battlefield
+				player.move((x, y))
 
 	def execute_fires(players, subjects):
 		# TODO: account for world wrapping
 		for player in players:
 			# unpack required information
 			(angle, distance, radius, charge) = player.fire
-			loc_x, loc_y = player.location
-			lim_x, lim_y = config.game.field_dimensions
 			# calculate the epicenter of the blast
 			epicenter = (
-				(loc_x + cos(angle) * distance) % lim_x,
-				(loc_y + sin(angle) * distance) % lim_y
+				(player.x + cos(angle) * distance) % self.width,
+				(player.y + sin(angle) * distance) % self.height
 			)
 
 			# TODO: subtract energy cost (and signal death if it proved fatal)
 
 			for subject in subjects:
 				# calculate distance to epicenter for all subjects, signal hit if ... hit
-				if util.distance(epicenter, subject.location) <= radius:
+				if util.distance(epicenter, (subjectx, subject.y)) <= radius:
 					subject.signal_hit(
 						player.name,
-						util.angle(subject.location, epicenter),
+						util.angle((subject.x, subject.y), epicenter),
 						charge
 					)
 
@@ -141,11 +145,11 @@ class LoBotomyServer:
 
 			for subject in subjects:
 				# calculate distance to all subjects, signal detect if within scan
-				distance = util.distance(player.location, subject.location)
+				distance = util.distance((player.x, player.y), (subject.x, subject.y))
 				if distance <= radius:
 					player.signal_detect(
 					        subject.name,
-					        util.angle(player.location, subject.location),
+					        util.angle((player.x, player.y), (subject.x, subject.y)),
 					        distance,
 					        subject.energy
 					)
@@ -185,8 +189,8 @@ class LoBotomyServer:
 
 		# set player start values
 		player.energy = config.player.max_energy
-		lim_x, lim_y = config.game.field_dimensions
-		player.location = (random.random() * lim_x, random.random() * lim_y)
+		player.x, player.y = (random.random() * self.width, random.random() * self.height)
+		self.field.add(player)
 
 		self._in_game.append(player)
 
@@ -209,7 +213,7 @@ class LoBotomyServer:
 # enumerate possible player states
 PlayerState = enum('VOID', 'WAITING', 'ACTING', 'DEAD')
 
-class Player(Thread):
+class Player(Thread, Point):
 	"""
 	Class modeling a player, handling messages from and to a client.
 
@@ -218,7 +222,9 @@ class Player(Thread):
 
 	def __init__(self, server, sock):
 		# call the constructor of Thread
-		super().__init__()
+		super(Thread, self).__init__()
+		# call the constructor of Point
+		super(Point, self).__init__(None, None)
 
 		# indicate being a daemon thread
 		self.daemon = True
@@ -238,12 +244,11 @@ class Player(Thread):
 		self.state = PlayerState.VOID
 
 		# actions requested by the client
-		self.move = None
-		self.fire = None
-		self.scan = None
+		self.move_action = None
+		self.fire_action = None
+		self.scan_action = None
 
 		# game state variables
-		self.location = (None, None)
 		self.energy = 0.0
 		self.dead_turns = 0
 
@@ -283,9 +288,9 @@ class Player(Thread):
 		self.state = PlayerState.ACTING
 
 		# reset action requests
-		self.move = None
-		self.fire = None
-		self.scan = None
+		self.move_action = None
+		self.fire_action = None
+		self.scan_action = None
 
 		self.send(protocol.begin(turn_number, energy).values())
 
@@ -327,25 +332,37 @@ class Player(Thread):
 			self.send_error(e.errno)
 
 	def handle_move(self, direction, distance):
+		# check state
 		if self.state is not PlayerState.ACTING:
 			raise LoBotomyException(202)
 
-		# TODO: check validity
-		self.move = (direction, distance)
+		# check action validity
+		if game.move_cost(distance) > config.player.max_energy:
+			raise LoBotomyException(101)
+
+		self.move_action = (direction, distance)
 
 	def handle_fire(self, direction, distance, radius, charge):
+		# check state
 		if self.state is not PlayerState.ACTING:
 			raise LoBotomyException(202)
 
-		# TODO: check validity
+		# check action validity
+		if game.fire_cost(distance, radius, charge) > config.player.max_energy:
+			raise LoBotomyException(102)
+
 		self.fire = (direction, distance, radius, charge)
 
 	def handle_scan(self, radius):
+		# check state
 		if self.state is not PlayerState.ACTING:
 			raise LoBotomyException(202)
 
-		# TODO: check validity
-		self.scan = (radius,)
+		# check action validity
+		if game.scan_cost(radius) > config.player.max_energy:
+			raise LoBotomyException(103)
+
+		self.scan_action = (radius,)
 
 	def send_error(self, error):
 		logging.debug('client caused error %d', error)
