@@ -81,14 +81,15 @@ class LoBotomyServer:
 			# wait the configured amount of time for players to submit commands
 			time.sleep(config.game.turn_duration / 1000)
 
+			# TODO: rewrite filter lambda's as generator expression
 			# execute all requested move actions
 			self.execute_moves(filter(lambda p: p.move_action is not None, self._in_game))
 
 			# execute all requested fire actions
-			self.execute_fires(filter(lambda p: p.fire_action is not None, self._in_game), self._in_game)
+			self.execute_fires(filter(lambda p: p.fire_action is not None, self._in_game))
 
 			# execute all requested scan actions
-			self.execute_scans(filter(lambda p: p.scan_action is not None, self._in_game), self._in_game)
+			self.execute_scans(filter(lambda p: p.scan_action is not None, self._in_game))
 
 			# remove all dead players from the battlefield
 			for player in filter(lambda p: p.state is PlayerState.DEAD, self._in_game):
@@ -115,8 +116,7 @@ class LoBotomyServer:
 				# move player on the battlefield
 				player.move((x, y))
 
-	def execute_fires(players, subjects):
-		# TODO: account for world wrapping
+	def execute_fires(players):
 		for player in players:
 			# unpack required information
 			(angle, distance, radius, charge) = player.fire
@@ -132,8 +132,21 @@ class LoBotomyServer:
 				# signal player is dead
 				player.signal_death(config.player.dead_turns)
 			else:
+				# calculate the bounding box for the blast
+				bounds = (
+					epicenter[0] - radius, epicenter[1] - radius,
+					epicenter[0] + radius, epicenter[1] + radius
+				)
+				# collect all players in the bounding box for the blast
+				subjects = set()
+				# TODO: change self.field.root.bounds into something less aweful
+				for region in util.generate_wrapped_bounds(self.field.root.bounds, bounds):
+					subjects = subject.union(self.field.find_all(region))
+
+				# check if subject in blast radius (bounding box possibly selects too many players)
 				for subject in subjects:
 					# calculate distance to epicenter for all subjects, signal hit if ... hit
+					# TODO: account for wrapping in distance
 					if util.distance(epicenter, (subjectx, subject.y)) <= radius:
 						subject.signal_hit(
 							player.name,
@@ -141,8 +154,7 @@ class LoBotomyServer:
 							charge
 						)
 
-	def execute_scans(players, subjects):
-		# TODO: account for world wrapping
+	def execute_scans(players):
 		for player in players:
 			(radius,) = player.scan
 
@@ -152,8 +164,21 @@ class LoBotomyServer:
 				# signal player is dead
 				player.signal_death(config.player.dead_turns)
 			else:
+				# calculate the bounding box for the scan
+				bounds = (
+					player.x - radius, player.y - radius,
+					player.x + radius, player.y + radius
+				)
+				# collect all players in the bounding box for the blast
+				subjects = set()
+				# TODO: change self.field.root.bounds into something less aweful
+				for region in util.generate_wrapped_bounds(self.field.root.bounds, bounds):
+					subjects = subjects.union(self.field.find_all(region))
+
+				# check if subject in scan radius (bounding box possibly selects too many players)
 				for subject in subjects:
 					# calculate distance to all subjects, signal detect if within scan
+					# TODO: account for wrapping in distance
 					distance = util.distance((player.x, player.y), (subject.x, subject.y))
 					if distance <= radius:
 						player.signal_detect(
