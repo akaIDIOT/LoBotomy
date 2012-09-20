@@ -105,6 +105,7 @@ class LoBotomyServer:
 			# calculate new values
 			x = (player.x + cos(angle) * distance) % self.width
 			y = (player.y + sin(angle) * distance) % self.height
+
 			# subtract energy cost
 			player.energy -= game.move_cost(distance)
 			if player.energy <= 0.0:
@@ -125,34 +126,42 @@ class LoBotomyServer:
 				(player.y + sin(angle) * distance) % self.height
 			)
 
-			# TODO: subtract energy cost (and signal death if it proved fatal)
-
-			for subject in subjects:
-				# calculate distance to epicenter for all subjects, signal hit if ... hit
-				if util.distance(epicenter, (subjectx, subject.y)) <= radius:
-					subject.signal_hit(
-						player.name,
-						util.angle((subject.x, subject.y), epicenter),
-						charge
-					)
+			# subtract energy cost
+			player.energy -= game.fire_cost(distance, radius, charge)
+			if player.energy <= 0.0:
+				# signal player is dead
+				player.signal_death(config.player.dead_turns)
+			else:
+				for subject in subjects:
+					# calculate distance to epicenter for all subjects, signal hit if ... hit
+					if util.distance(epicenter, (subjectx, subject.y)) <= radius:
+						subject.signal_hit(
+							player.name,
+							util.angle((subject.x, subject.y), epicenter),
+							charge
+						)
 
 	def execute_scans(players, subjects):
 		# TODO: account for world wrapping
 		for player in players:
 			(radius,) = player.scan
 
-			# TODO: subtract energy cost (and signal death if it proved fatal)
-
-			for subject in subjects:
-				# calculate distance to all subjects, signal detect if within scan
-				distance = util.distance((player.x, player.y), (subject.x, subject.y))
-				if distance <= radius:
-					player.signal_detect(
-					        subject.name,
-					        util.angle((player.x, player.y), (subject.x, subject.y)),
-					        distance,
-					        subject.energy
-					)
+			# subtract energy cost
+			player.energy -= game.scan_cost(radius)
+			if player.energy <= 0.0:
+				# signal player is dead
+				player.signal_death(config.player.dead_turns)
+			else:
+				for subject in subjects:
+					# calculate distance to all subjects, signal detect if within scan
+					distance = util.distance((player.x, player.y), (subject.x, subject.y))
+					if distance <= radius:
+						player.signal_detect(
+								subject.name,
+								util.angle((player.x, player.y), (subject.x, subject.y)),
+								distance,
+								subject.energy
+						)
 
 	def register(self, name, player):
 		if name in self._players:
