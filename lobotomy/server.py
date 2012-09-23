@@ -81,15 +81,14 @@ class LoBotomyServer:
 			# wait the configured amount of time for players to submit commands
 			time.sleep(config.game.turn_duration / 1000)
 
-			# TODO: rewrite filter lambda's as generator expression
 			# execute all requested move actions
-			self.execute_moves(filter(lambda p: p.move_action is not None, self._in_game))
+			self.execute_moves(player for player in self._in_game if player.move_action is not None)
 
 			# execute all requested fire actions
-			self.execute_fires(filter(lambda p: p.fire_action is not None, self._in_game))
+			self.execute_fires(player for player in self._in_game if player.fire_action is not None)
 
 			# execute all requested scan actions
-			self.execute_scans(filter(lambda p: p.scan_action is not None, self._in_game))
+			self.execute_scans(player for player in self._in_game if player.scan_action is not None)
 
 			# remove all dead players from the battlefield
 			for player in filter(lambda p: p.state is PlayerState.DEAD, self._in_game):
