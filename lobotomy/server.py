@@ -104,9 +104,7 @@ class LoBotomyServer:
 			# unpack required inforation
 			angle, distance = player.move_action
 			# calculate new values
-			x = (player.x + cos(angle) * distance) % self.width
-			y = (player.y + sin(angle) * distance) % self.height
-
+			x, y = util.move_wrapped((player.x, player.y), angle, distance, (self.width, self.height))
 			# subtract energy cost
 			player.energy -= game.move_cost(distance)
 			if player.energy <= 0.0:
@@ -121,10 +119,7 @@ class LoBotomyServer:
 			# unpack required information
 			(angle, distance, radius, charge) = player.fire
 			# calculate the epicenter of the blast
-			epicenter = (
-				(player.x + cos(angle) * distance) % self.width,
-				(player.y + sin(angle) * distance) % self.height
-			)
+			epicenter = util.move_wrapped((player.x, player.y), angle, distance, (self.width, self.height))
 
 			# subtract energy cost
 			player.energy -= game.fire_cost(distance, radius, charge)
@@ -147,7 +142,7 @@ class LoBotomyServer:
 				for subject in subjects:
 					# calculate distance to epicenter for all subjects, signal hit if ... hit
 					# TODO: account for wrapping in distance
-					if util.distance(epicenter, (subjectx, subject.y)) <= radius:
+					if util.distance(epicenter, (subject.x, subject.y)) <= radius:
 						subject.signal_hit(
 							player.name,
 							util.angle((subject.x, subject.y), epicenter),
