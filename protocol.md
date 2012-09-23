@@ -152,9 +152,9 @@ Remarks are inserted after a `#`-character.
 ← end
 ← detect Klaas 1.234 0.3 0.4  # Henk detected Klaas over there
 ← begin 124 0.6               # used 0.2 + 0.4 energy, 0.2 energy recharged at end of turn
-→ fire 1.123 0.3 0.2 0.4      # fire at Klaas' location with 0.2 blast radius
+→ fire 1.123 0.2 0.3 0.4      # fire at Klaas' location with 0.3 blast radius
 ← end
-← hit Henk 1.123 0.4          # radius was rather large, Henk hit himself
+← hit Henk 1.123 0.4          # radius was larger than distance, Henk hit himself (he's a bit 'special')
 ← hit Klaas 1.123 0.6         # adversary was not stupid, fired at Henk
 ← death 5                     # Henk died, is dead for 5 turns
 ```
