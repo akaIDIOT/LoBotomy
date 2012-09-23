@@ -38,7 +38,7 @@ class LoBotomyServer:
 			self._ssock.bind((self.host, self.port))
 			# make the socket listen for new connections
 			self._ssock.listen(5)
-			logging.info('succesfully bound to %s:%d, listening for clients', self.host, self.port)
+			logging.info('successfully bound to %s:%d, listening for clients', self.host, self.port)
 
 			self._shutdown = False
 
@@ -99,7 +99,7 @@ class LoBotomyServer:
 			for player in self._in_game:
 				player.signal_end()
 
-	def execute_moves(players):
+	def execute_moves(self, players):
 		for player in players:
 			# unpack required inforation
 			angle, distance = player.move_action
@@ -116,7 +116,7 @@ class LoBotomyServer:
 				# move player on the battlefield
 				player.move((x, y))
 
-	def execute_fires(players):
+	def execute_fires(self, players):
 		for player in players:
 			# unpack required information
 			(angle, distance, radius, charge) = player.fire
@@ -154,7 +154,7 @@ class LoBotomyServer:
 							charge
 						)
 
-	def execute_scans(players):
+	def execute_scans(self, players):
 		for player in players:
 			(radius,) = player.scan
 
@@ -352,7 +352,7 @@ class Player(Thread, Point):
 			# no exception, we're good (real good!)
 			self.name = name
 			self.state = PlayerState.DEAD
-		except LoBotomyError as e:
+		except LoBotomyException as e:
 			self.send_error(e.errno)
 
 	def handle_spawn(self):
@@ -362,7 +362,7 @@ class Player(Thread, Point):
 		try:
 			self._server.request_spawn(self)
 			self.state = PlayerState.WAITING
-		except LoBotomyError as e:
+		except LoBotomyException as e:
 			self.send_error(e.errno)
 
 	def handle_move(self, direction, distance):
