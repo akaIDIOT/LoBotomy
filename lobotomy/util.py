@@ -34,6 +34,22 @@ def distance(a, b):
 
 	return math.sqrt(dx ** 2 + dy ** 2)
 
+def move_wrapped(location, angle, distance, field_bounds):
+	"""
+	Creates new wrapped locations from location, applying angle and distance
+	while wrapping the new location with the provided field bounds.
+	"""
+	# unpack required values
+	x, y = location
+	width, height = field_bounds
+
+	# calculate new values
+	x = (x + math.cos(angle) * distance) % width
+	y = (y + math.sin(angle) * distance) % height
+
+	# return new location
+	return (x, y)
+
 def generate_wrapped_bounds(field_bounds, target_bounds):
 	"""
 	Generates bounds of the form (x1, y1, x2, y2) that together represent the
