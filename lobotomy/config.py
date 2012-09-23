@@ -21,5 +21,5 @@ class player:
 	# maximum and starting energy for players
 	max_energy = 1.0
 	# amount of energy that is recharged at the end of each turn
-	turn_charge = 0.2
+	turn_heal = 0.2
 

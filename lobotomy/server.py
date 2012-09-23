@@ -71,7 +71,7 @@ class LoBotomyServer:
 
 			# send all alive players a new turn command
 			for player in self._in_game:
-				player.energy = min(config.player.max_energy + config.player.turn_charge, 1.0)
+				player.energy = min(config.player.max_energy + config.player.turn_heal, 1.0)
 				player.send(protocol.begin(self.turn_number, player.energy).values())
 
 			# decrement wait counters for dead players
@@ -200,7 +200,7 @@ class LoBotomyServer:
 		player.send(protocol.welcome(
 			protocol.VERSION,
 			config.player.max_energy,
-			config.player.turn_charge,
+			config.player.turn_heal,
 			config.game.turn_duration,
 			-1
 		).values())

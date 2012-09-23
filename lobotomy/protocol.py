@@ -56,7 +56,7 @@ join = command('join',
 welcome = command('welcome',
 	('version', int),
 	('energy', float),
-	('charge', float),
+	('heal', float),
 	('turn_duration', int),
 	('turns_left', int)
 )

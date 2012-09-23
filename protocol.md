@@ -48,13 +48,13 @@ Format: `join name`
 Sent by you to request to join the game using a particular name (containing just alphanumeric characters).
 
 ### welcome
-Format: `welcome version energy charge turn-duration turns-left`
+Format: `welcome version energy heal turn-duration turns-left`
 
 Sent by the server to welcome you to the game and provide some game settings:
 
 1. **version** (integer): the protocol version used by the server;
 1. **energy** (float): the starting and maximum energy for players;
-1. **charge** (float): the amount of energy players get at the end of each turn;
+1. **heal** (float): the amount of energy players get at the end of each turn;
 1. **turn-duration** (integer): the number of milliseconds a turn will take;
 1. **turns-left** (integer): the number of turns the current game has left (or -1 if the game is run perpetual).
 
@@ -80,14 +80,14 @@ Sent by you to request a move action to be performed in the current turn with th
 1. **distance** (float): the distance to move.
 
 ### fire
-Format: `fire angle distance radius yield`
+Format: `fire angle distance radius charge`
 
 Sent by you to request a fire action to be performed in the current turn with the following details:
 
 1. **angle** (radian, float): the direction in which to fire a bomb;
 1. **distance** (float): the distance to fire the bomb;
 1. **radius** (float): the radius of the bomb's explosion;
-1. **yield** (float): the energy dissipation of the bomb (amount of damage).
+1. **charge** (float): the energy dissipation of the bomb (amount of damage).
 
 ### scan
 Format: `scan radius`
@@ -102,13 +102,13 @@ Format: `end`
 Sent by the server to indicate that no further actions will be accepted before for the current turn and it will execute the current turn.
 
 ### hit
-Format: `hit name angle yield`
+Format: `hit name angle charge`
 
 Sent by the server to indicate that you were hit by a bomb, with the following details:
 
 1. **name** (string): the name of the player that fired the bomb;
 1. **angle** (radian, float): the direction the blast came from (the epicenter of the blast);
-1. **yield** (float): the strength of the bomb.
+1. **charge** (float): the strength of the bomb.
 
 ### death
 Format: `death turns`
@@ -151,7 +151,7 @@ Remarks are inserted after a `#`-character.
 → scan 0.4                    # …and take a look around
 ← end
 ← detect Klaas 1.234 0.3 0.4  # Henk detected Klaas over there
-← begin 124 0.6               # used 0.2 + 0.4 energy, 0.2 energy recharged at end of turn
+← begin 124 0.6               # used 0.2 + 0.4 energy, 0.2 energy healed at end of turn
 → fire 1.123 0.2 0.3 0.4      # fire at Klaas' location with 0.3 blast radius
 ← end
 ← hit Henk 1.123 0.4          # radius was larger than distance, Henk hit himself (he's a bit 'special')
