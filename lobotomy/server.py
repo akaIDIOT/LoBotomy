@@ -74,12 +74,16 @@ class LoBotomyServer:
 				player.energy = min(config.player.max_energy + config.player.turn_heal, 1.0)
 				player.send(protocol.begin(self.turn_number, player.energy).values())
 
+			# wait the configured amount of time for players to submit commands
+			time.sleep(config.game.turn_duration / 1000)
+
+			# send all players the end turn command
+			for player in self._in_game:
+				player.signal_end()
+
 			# decrement wait counters for dead players
 			for player in filter(lambda p: p.state is PlayerState.DEAD, self._players.values()):
 				player.dead_turns -= 1
-
-			# wait the configured amount of time for players to submit commands
-			time.sleep(config.game.turn_duration / 1000)
 
 			# execute all requested move actions
 			self.execute_moves(player for player in self._in_game if player.move_action is not None)
@@ -94,13 +98,9 @@ class LoBotomyServer:
 			for player in filter(lambda p: p.state is PlayerState.DEAD, self._in_game):
 				self.field.remove(player)
 
-			# send all players the end turn command
-			for player in self._in_game:
-				player.signal_end()
-
 	def execute_moves(self, players):
 		for player in players:
-			# unpack required inforation
+			# unpack required information
 			angle, distance = player.move_action
 			# calculate new values
 			x, y = util.move_wrapped((player.x, player.y), angle, distance, (self.width, self.height))
