@@ -1,17 +1,14 @@
 import signal
-import sys
 
-from lobotomy import config
 from lobotomy.server import LoBotomyServer
 
 # create a server object
-server = LoBotomyServer(config.host.address, config.host.port)
+server = LoBotomyServer()
 
 # define a shutdown handler
 def shutdown(signal, frame):
-	print("Shutting down...")
+	print("shutting down...")
 	server.shutdown()
-	#sys.exit(0)
 
 # add a signal before serving
 signal.signal(signal.SIGINT, shutdown)
@@ -22,4 +19,3 @@ logging.basicConfig(level = 'DEBUG')
 
 # start the server
 server.serve_forever()
-

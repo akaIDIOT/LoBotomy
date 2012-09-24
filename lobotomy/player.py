@@ -21,9 +21,9 @@ class Player(Thread, Point):
 
 	def __init__(self, server, sock):
 		# call the constructor of Thread
-		super(Thread, self).__init__()
+		Thread.__init__(self)
 		# call the constructor of Point
-		super(Point, self).__init__(None, None)
+		Point.__init__(self, None, None)
 
 		# indicate being a daemon thread
 		self.daemon = True
