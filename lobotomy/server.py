@@ -108,7 +108,7 @@ class LoBotomyServer:
 			player.energy -= game.move_cost(distance)
 			if player.energy <= 0.0:
 				# signal player is dead
-				player.signal_death(config.player.dead_turns)
+				player.signal_death(config.game.dead_turns)
 			else:
 				# move player on the battlefield
 				player.move((x, y))
@@ -124,7 +124,7 @@ class LoBotomyServer:
 			player.energy -= game.fire_cost(distance, radius, charge)
 			if player.energy <= 0.0:
 				# signal player is dead
-				player.signal_death(config.player.dead_turns)
+				player.signal_death(config.game.dead_turns)
 			else:
 				# calculate the bounding box for the blast
 				bounds = (
@@ -135,7 +135,7 @@ class LoBotomyServer:
 				subjects = set()
 				# TODO: change self.field.root.bounds into something less aweful
 				for region in util.generate_wrapped_bounds(self.field.root.bounds, bounds):
-					subjects = subject.union(self.field.find_all(region))
+					subjects = subjects.union(self.field.find_all(region))
 
 				# check if subject in blast radius (bounding box possibly selects too many players)
 				for subject in subjects:
@@ -156,7 +156,7 @@ class LoBotomyServer:
 			player.energy -= game.scan_cost(radius)
 			if player.energy <= 0.0:
 				# signal player is dead
-				player.signal_death(config.player.dead_turns)
+				player.signal_death(config.game.dead_turns)
 			else:
 				# calculate the bounding box for the scan
 				bounds = (
