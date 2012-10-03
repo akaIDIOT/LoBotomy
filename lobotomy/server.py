@@ -116,7 +116,7 @@ class LoBotomyServer:
 	def execute_fires(self, players):
 		for player in players:
 			# unpack required information
-			(angle, distance, radius, charge) = player.fire
+			(angle, distance, radius, charge) = player.fire_action
 			# calculate the epicenter of the blast
 			epicenter = util.move_wrapped((player.x, player.y), angle, distance, (self.width, self.height))
 
@@ -151,7 +151,7 @@ class LoBotomyServer:
 
 	def execute_scans(self, players):
 		for player in players:
-			(radius,) = player.scan
+			(radius,) = player.scan_action
 
 			# subtract energy cost
 			player.energy -= game.scan_cost(radius)
