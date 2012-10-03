@@ -102,12 +102,13 @@ def generate_wrapped_bounds(field_bounds, target_bounds):
 
 class WrappedRadius:
 	"""
-	TODO: Document me.
+	Convenience class to check if a point is within the radius of another
+	point in a wrapped field.
 	"""
 
 	def __init__(self, point, radius, field_bounds):
 		"""
-		TODO: Document me.
+		Creates a new wrapped radius of size radius around point.
 		"""
 		self.point = point
 		self.radius = radius
@@ -115,6 +116,18 @@ class WrappedRadius:
 
 	def __contains__(self, point):
 		"""
-		TODO: Document me.
+		Checks whether the point is in self.point's radius in a wrapped field.
 		"""
-		pass
+		# check wrapped distances in all directions (and the regular position for x = 0 and y = 0
+		for x in (-1, 0, 1):
+			# wrap x value
+			wrapped_x = point.x + x * self.field_bounds[0]
+			for y in (-1, 0, 1):
+				# wrap y value
+				wrapped_y = point.y + y * self.field_bounds[1]
+				if distance((self.point.x, self.point.y), (wrapped_x, wrapped_y)) <= self.radius:
+					# if current wrap is within radius, point is in wrapped radius
+					return True
+
+		# not within any wrapped radius
+		return False
