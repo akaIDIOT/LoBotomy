@@ -34,6 +34,13 @@ def distance(a, b):
 
 	return math.sqrt(dx ** 2 + dy ** 2)
 
+def min_wrapped_distance(field_bounds, a, b):
+	"""
+	Calculates the distance between two points encoded as (x, y) in a wrapped
+	field bounded by field_bounds.
+	"""
+
+
 def move_wrapped(location, angle, distance, field_bounds):
 	"""
 	Creates new wrapped locations from location, applying angle and distance
@@ -100,3 +107,21 @@ def generate_wrapped_bounds(field_bounds, target_bounds):
 		yield (tx1, fy1, tx2, ty2 - f_height) # change top and bottom y values
 		# conjunctions with corners handled above
 
+class WrappedRadius:
+	"""
+	TODO: Document me.
+	"""
+
+	def __init__(self, point, radius, field_bounds):
+		"""
+		TODO: Document me.
+		"""
+		self.point = point
+		self.radius = radius
+		self.field_bounds = field_bounds
+
+	def __contains__(self, point):
+		"""
+		TODO: Document me.
+		"""
+		pass

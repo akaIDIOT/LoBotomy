@@ -11,3 +11,5 @@ class TestDistance(unittest.TestCase):
 class TestWrappedBoundsGenerator(unittest.TestCase):
 	pass
 
+class TestWrappedRadius(unittest.TestCase):
+	pass
