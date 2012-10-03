@@ -130,7 +130,7 @@ class Player(Thread, Point):
 		except LoBotomyException as e:
 			self.send_error(e.errno)
 
-	def handle_move(self, direction, distance):
+	def handle_move(self, angle, distance):
 		# check state
 		if self.state is not PlayerState.ACTING:
 			raise LoBotomyException(202)
@@ -139,9 +139,9 @@ class Player(Thread, Point):
 		if game.move_cost(distance) > config.player.max_energy:
 			raise LoBotomyException(101)
 
-		self.move_action = (direction, distance)
+		self.move_action = (angle, distance)
 
-	def handle_fire(self, direction, distance, radius, charge):
+	def handle_fire(self, angle, distance, radius, charge):
 		# check state
 		if self.state is not PlayerState.ACTING:
 			raise LoBotomyException(202)
@@ -150,7 +150,7 @@ class Player(Thread, Point):
 		if game.fire_cost(distance, radius, charge) > config.player.max_energy:
 			raise LoBotomyException(102)
 
-		self.fire = (direction, distance, radius, charge)
+		self.fire = (angle, distance, radius, charge)
 
 	def handle_scan(self, radius):
 		# check state
