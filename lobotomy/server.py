@@ -137,11 +137,12 @@ class LoBotomyServer:
 				for region in util.generate_wrapped_bounds(self.field.root.bounds, bounds):
 					subjects = subjects.union(self.field.find_all(region))
 
+				# create a wrapped radius to check distance against
+				radius = util.WrappedRadius(epicenter, radius, (self.width, self.height))
 				# check if subject in blast radius (bounding box possibly selects too many players)
 				for subject in subjects:
 					# calculate distance to epicenter for all subjects, signal hit if ... hit
-					# TODO: account for wrapping in distance
-					if util.distance(epicenter, (subject.x, subject.y)) <= radius:
+					if (subject.x, subject.y) in radius:
 						subject.signal_hit(
 							player.name,
 							util.angle((subject.x, subject.y), epicenter),
