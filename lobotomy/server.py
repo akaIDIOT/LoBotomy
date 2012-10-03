@@ -145,6 +145,7 @@ class LoBotomyServer:
 					if (subject.x, subject.y) in radius:
 						subject.signal_hit(
 							player.name,
+							# FIXME: angle should be calculated on wrapped epicenter / subject location
 							util.angle((subject.x, subject.y), epicenter),
 							charge
 						)
@@ -174,9 +175,9 @@ class LoBotomyServer:
 				# check if subject in scan radius (bounding box possibly selects too many players)
 				for subject in subjects:
 					# calculate distance to all subjects, signal detect if within scan
-					# FIXME: returning and using something else than bool from __contains__ is evil :(
-					wrapped_location = (subject.x, subject.y) in radius
-					if wrapped_location:
+					# FIXME: using radius twice runs the expensive operation twice
+					(distance, wrapped_location) = radius.distance((subject.x, subject.y))
+					if (subject.x, subject.y) in radius:
 						player.signal_detect(
 								subject.name,
 								util.angle((player.x, player.y), wrapped_location),

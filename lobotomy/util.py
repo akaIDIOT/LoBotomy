@@ -114,20 +114,25 @@ class WrappedRadius:
 		self.radius = radius
 		self.field_bounds = field_bounds
 
-	def __contains__(self, point):
-		"""
-		Checks whether the point is in self.point's radius in a wrapped field.
-		"""
-		# check wrapped distances in all directions (and the regular position for x = 0 and y = 0
+	def distance(self, point):
+		# initialize minimal distance at infinity
+		min_distance = (float('inf'), (None, None))
+
+		# generate wrapped distances in all directions (and the regular position for x = 0 and y = 0
 		for x in (-1, 0, 1):
 			# wrap x value
 			wrapped_x = point[0] + x * self.field_bounds[0]
 			for y in (-1, 0, 1):
 				# wrap y value
 				wrapped_y = point[1] + y * self.field_bounds[1]
-				if distance(self.point, (wrapped_x, wrapped_y)) <= self.radius:
-					# if current wrap is within radius, point is in wrapped radius
-					return (wrapped_x, wrapped_y)
+				wrapped_distance = distance(self.point, (wrapped_x, wrapped_y))
+				if wrapped_distance < min_distance[0]:
+					min_distance = (wrapped_distance, (wrapped_x, wrapped_y))
 
-		# not within any wrapped radius
-		return False
+		return min_distance
+
+	def __contains__(self, point):
+		"""
+		Checks whether the point is in self.point's radius in a wrapped field.
+		"""
+		return self.distance(point)[0] <= self.radius
