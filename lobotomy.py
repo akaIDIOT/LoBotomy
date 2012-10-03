@@ -7,7 +7,7 @@ server = LoBotomyServer()
 
 # define a shutdown handler
 def shutdown(signal, frame):
-	print("shutting down...")
+	logging.info("caught SIGINT, requesting shutdown")
 	server.shutdown()
 
 # add a signal before serving
