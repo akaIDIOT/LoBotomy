@@ -127,7 +127,7 @@ class WrappedRadius:
 				wrapped_y = point[1] + y * self.field_bounds[1]
 				if distance(self.point, (wrapped_x, wrapped_y)) <= self.radius:
 					# if current wrap is within radius, point is in wrapped radius
-					return True
+					return (wrapped_x, wrapped_y)
 
 		# not within any wrapped radius
 		return False

@@ -170,16 +170,17 @@ class LoBotomyServer:
 				for region in util.generate_wrapped_bounds(self.field.root.bounds, bounds):
 					subjects = subjects.union(self.field.find_all(region))
 
+				radius = util.WrappedRadius((player.x, player.y), radius, (self.width, self.height))
 				# check if subject in scan radius (bounding box possibly selects too many players)
 				for subject in subjects:
 					# calculate distance to all subjects, signal detect if within scan
-					# TODO: account for wrapping in distance
-					distance = util.distance((player.x, player.y), (subject.x, subject.y))
-					if distance <= radius:
+					# FIXME: returning and using something else than bool from __contains__ is evil :(
+					wrapped_location = (subject.x, subject.y) in radius
+					if wrapped_location:
 						player.signal_detect(
 								subject.name,
-								util.angle((player.x, player.y), (subject.x, subject.y)),
-								distance,
+								util.angle((player.x, player.y), wrapped_location),
+								util.distance((player.x, player.y), wrapped_location),
 								subject.energy
 						)
 
