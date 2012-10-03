@@ -251,6 +251,7 @@ class Point:
 		# 'move' the point from old region to new
 		old_region.points.remove(self)
 		region.points.add(self)
+		self.region = region
 
 		# rebalance the tree by merging old and splitting new regions
 		old_region.merge()
