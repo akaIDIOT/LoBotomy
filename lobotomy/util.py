@@ -121,11 +121,11 @@ class WrappedRadius:
 		# check wrapped distances in all directions (and the regular position for x = 0 and y = 0
 		for x in (-1, 0, 1):
 			# wrap x value
-			wrapped_x = point.x + x * self.field_bounds[0]
+			wrapped_x = point[0] + x * self.field_bounds[0]
 			for y in (-1, 0, 1):
 				# wrap y value
-				wrapped_y = point.y + y * self.field_bounds[1]
-				if distance((self.point.x, self.point.y), (wrapped_x, wrapped_y)) <= self.radius:
+				wrapped_y = point[1] + y * self.field_bounds[1]
+				if distance(self.point, (wrapped_x, wrapped_y)) <= self.radius:
 					# if current wrap is within radius, point is in wrapped radius
 					return True
 
