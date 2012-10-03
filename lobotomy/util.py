@@ -34,13 +34,6 @@ def distance(a, b):
 
 	return math.sqrt(dx ** 2 + dy ** 2)
 
-def min_wrapped_distance(field_bounds, a, b):
-	"""
-	Calculates the distance between two points encoded as (x, y) in a wrapped
-	field bounded by field_bounds.
-	"""
-
-
 def move_wrapped(location, angle, distance, field_bounds):
 	"""
 	Creates new wrapped locations from location, applying angle and distance
