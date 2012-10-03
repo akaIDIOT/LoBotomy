@@ -71,7 +71,7 @@ class LoBotomyServer:
 
 			# send all alive players a new turn command
 			for player in self._in_game:
-				player.energy = min(config.player.max_energy + config.player.turn_heal, 1.0)
+				player.energy = min(player.energy + config.player.turn_heal, 1.0)
 				player.signal_begin(self.turn_number, player.energy)
 
 			# wait the configured amount of time for players to submit commands
