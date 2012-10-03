@@ -27,7 +27,7 @@ class ExampleBot:
 		self.playing = False
 		self.energy = 0
 		self.max_energy = 0
-		self.charge = 0.0
+		self.heal = 0.0
 		self.turn_duration = 0
 		self.turns_left = 0
 		self.turn_number = 0
@@ -70,7 +70,7 @@ class ExampleBot:
 		parsed = protocol.parse_msg(welcome_msg)
 		self.energy = parsed['energy']
 		self.max_energy = parsed['energy']
-		self.charge = parsed['charge']
+		self.heal = parsed['heal']
 		self.turn_duration = parsed['turn_duration']
 		self.turns_left = parsed['turns_left']
 		self.in_game = True
