@@ -1,8 +1,8 @@
 # make sure flake8 ignores this file: flake8: noqa
 
-# current protocol version
 from collections import OrderedDict
 
+# current protocol version
 VERSION = 0
 
 # predefine error codes
