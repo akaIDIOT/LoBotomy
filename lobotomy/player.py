@@ -150,7 +150,7 @@ class Player(Thread, Point):
 		if game.fire_cost(distance, radius, charge) > config.player.max_energy:
 			raise LoBotomyException(102)
 
-		self.fire = (angle, distance, radius, charge)
+		self.fire_action = (angle, distance, radius, charge)
 
 	def handle_scan(self, radius):
 		# check state
