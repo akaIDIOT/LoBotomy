@@ -172,9 +172,15 @@ class LoBotomyServer:
 		for player in players:
 			(radius,) = player.scan_action
 			# TODO: log scan action for player
+			logging.info('player {} at {} scanned with radius {}'.format(
+				player.name,
+				(player.x, player.y),
+				radius
+			))
 
 			# subtract energy cost
-			player.energy -= game.scan_cost(radius)
+			cost = game.scan_cost(radius)
+			player.energy -= cost
 			if player.energy <= 0.0:
 				# signal player is dead
 				player.signal_death(config.game.dead_turns)
