@@ -48,7 +48,7 @@ class ExampleBot:
 			logging.info('Requesting spawn...')
 			self.parse_pregame()
 			while self.playing:
-				logging.info('Let\'s play!')
+				logging.info('Let\'s play! (at {} energy)'.format(self.energy))
 				# Wait for begin
 				cmds = self.determine_commands()
 				for cmd in cmds:
@@ -127,20 +127,20 @@ class ExampleBot:
 		if random.randint(0, 1):
 			cmd = 'move '
 			cmd += str(random.random() * 2 * math.pi) + ' ' # angle
-			cmd += str(random.random() * 0.2 * self.energy) # distance
+			cmd += str(random.random() * 0.4 * self.energy) # distance
 			cmds.append(cmd)
 		# Think of fire
 		if random.randint(0, 1):
 			cmd = 'fire '
 			cmd += str(random.random() * 2 * math.pi) + ' ' # angle
 			cmd += str(random.random() * 0.2 * self.energy) + ' ' # distance
-			cmd += str(random.random() * 0.1 * self.energy) + ' ' # radius
-			cmd += str(random.random() * 0.1 * self.energy) # charge
+			cmd += str(random.random() * 0.2 * self.energy) + ' ' # radius
+			cmd += str(random.random() * 0.4 * self.energy) # charge
 			cmds.append(cmd)
 		# Think of scan
 		if random.randint(0, 1):
 			cmd = 'scan '
-			cmd += str(random.random() * 0.2 * self.energy) # radius
+			cmd += str(random.random() * 0.4 * self.energy) # radius
 			cmds.append(cmd)
 		return cmds
 
