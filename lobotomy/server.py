@@ -157,6 +157,9 @@ class LoBotomyServer:
 			for subject in subjects:
 				# calculate distance to epicenter for all subjects, signal hit if ... hit
 				if (subject.x, subject.y) in radius:
+					# subtract energy equal to charge from subject that was hit
+					subject.energy -= charge
+					# signal the subject it was hit
 					subject.signal_hit(
 						player.name,
 						util.angle(radius.distance((subject.x, subject.y))[1], epicenter),
