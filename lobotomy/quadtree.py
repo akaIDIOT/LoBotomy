@@ -190,7 +190,10 @@ class Region:
 			raise Exception('point not in region') # TODO: better error
 
 		if self.is_leaf:
+			# remove point from instance collectino
 			self.points.remove(point)
+			# remove pointer to this region from removed point
+			point.region = None
 			# indicate that a point was removed from this leaf (parent should check for merge)
 			return True
 		else:
