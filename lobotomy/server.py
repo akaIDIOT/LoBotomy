@@ -62,7 +62,7 @@ class LoBotomyServer:
 		# TODO: close all client threads (not all present in self._players)
 
 	def run_game(self):
-		logging.info('game loop started')
+		logging.info('main game loop started')
 		while not self._shutdown:
 			# increment internal turn counter
 			self.turn_number += 1
@@ -243,6 +243,7 @@ class LoBotomyServer:
 		if player.dead_turns > 0:
 			raise LoBotomyException(104)
 
+		# TODO: only spawn player just before turn begin
 		# set player start values
 		player.energy = config.player.max_energy
 		player.x, player.y = (random.random() * self.width, random.random() * self.height)
@@ -265,3 +266,4 @@ class LoBotomyServer:
 		except:
 			# ignore at this point
 			pass
+

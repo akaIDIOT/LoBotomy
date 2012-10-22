@@ -156,8 +156,6 @@ class Region:
 	def __contains__(self, point):
 		"""
 		Returns whether the point is within the bounds of this region.
-
-		TODO: figure out if using < for the 'upper' bound will be a problem.
 		"""
 		return self.bounds[0] <= point.x < self.bounds[2] and self.bounds[1] <= point.y < self.bounds[3]
 
