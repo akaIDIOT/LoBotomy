@@ -165,6 +165,9 @@ class LoBotomyServer:
 						util.angle(radius.distance((subject.x, subject.y))[1], epicenter),
 						charge
 					)
+					# check to see if the subject died from this hit
+					if subject.energy <= 0.0:
+						subject.signal_death(config.game.dead_turns)
 
 			player.energy -= cost
 			if player.energy <= 0.0:
@@ -235,7 +238,11 @@ class LoBotomyServer:
 	def unregister(self, name, player):
 		# remove player from game if the player is in it
 		if player in self._in_game:
+			# remove player from game
 			self._in_game.remove(player)
+			if player.region:
+				# remove player from battle field (take a shortcut to its own region
+				player.region.remove(player)
 
 		# remove player from online players
 		del self._players[name]

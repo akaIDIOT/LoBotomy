@@ -33,11 +33,11 @@ class Player(Thread, Point):
 		self._shutdown = False
 
 		self._handlers = {
-		'join': self.handle_join,
-		'spawn': self.handle_spawn,
-		'move': self.handle_move,
-		'fire': self.handle_fire,
-		'scan': self.handle_scan,
+			'join': self.handle_join,
+			'spawn': self.handle_spawn,
+			'move': self.handle_move,
+			'fire': self.handle_fire,
+			'scan': self.handle_scan,
 		}
 
 		self.state = PlayerState.VOID
