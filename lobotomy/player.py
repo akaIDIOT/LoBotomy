@@ -98,7 +98,7 @@ class Player(Thread, Point):
 		self.send(protocol.end().values())
 
 	def signal_hit(self, name, angle, charge):
-		self.send(protocol.fire(name, angle, charge).values())
+		self.send(protocol.hit(name, angle, charge).values())
 
 	def signal_death(self, turns):
 		self.state = PlayerState.DEAD
