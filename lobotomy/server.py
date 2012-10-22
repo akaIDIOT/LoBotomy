@@ -102,11 +102,18 @@ class LoBotomyServer:
 		for player in players:
 			# unpack required information
 			angle, distance = player.move_action
-			# TODO: log move action for player
 			# calculate new values
 			x, y = util.move_wrapped((player.x, player.y), angle, distance, (self.width, self.height))
-			# subtract energy cost
-			player.energy -= game.move_cost(distance)
+			# log action and subtract energy cost
+			cost = game.move_cost(distance)
+			# TODO: truncate location tuples to x decimals
+			logging.info('player {} moved from {} to {} (cost: {})'.format(
+				player.name,
+				(player.x, player.y),
+				(x, y),
+				cost
+			))
+			player.energy -= cost
 			if player.energy <= 0.0:
 				# signal player is dead
 				player.signal_death(config.game.dead_turns)
