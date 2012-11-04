@@ -18,7 +18,6 @@ class LoBotomyServer:
 	def __init__(self, field_dimensions = config.game.field_dimensions, host = config.host.address, port = config.host.port):
 		# create battlefield
 		self.width, self.height = field_dimensions
-		self.field = QuadTree((0, 0, self.width, self.height))
 
 		self.host = host
 		self.port = port
@@ -94,9 +93,12 @@ class LoBotomyServer:
 			# execute all requested scan actions
 			self.execute_scans(player for player in self._in_game if player.scan_action is not None)
 
-			# remove all dead players from the battlefield
-			for player in filter(lambda p: p.state is PlayerState.DEAD, self._in_game):
-				self.field.remove(player)
+	def find_players(self, bounds):
+		"""
+		TODO: document me
+		"""
+		# TODO: implement me
+		return set()
 
 	def execute_moves(self, players):
 		for player in players:
@@ -147,9 +149,8 @@ class LoBotomyServer:
 			)
 			# collect all players in the bounding box for the blast
 			subjects = set()
-			# TODO: change self.field.root.bounds into something less aweful
-			for region in util.generate_wrapped_bounds(self.field.root.bounds, bounds):
-				subjects = subjects.union(self.field.find_all(region))
+			for region in util.generate_wrapped_bounds((0, 0, self.width, self.height), bounds):
+				subjects = subjects.union(self.find_players(region))
 
 			# create a wrapped radius to check distance against
 			radius = util.WrappedRadius(epicenter, radius, (self.width, self.height))
@@ -198,9 +199,8 @@ class LoBotomyServer:
 				)
 				# collect all players in the bounding box for the blast
 				subjects = set()
-				# TODO: change self.field.root.bounds into something less aweful
-				for region in util.generate_wrapped_bounds(self.field.root.bounds, bounds):
-					subjects = subjects.union(self.field.find_all(region))
+				for region in util.generate_wrapped_bounds((0, 0, self.width, self.height), bounds):
+					subjects = subjects.union(self.find_players(region))
 
 				radius = util.WrappedRadius((player.x, player.y), radius, (self.width, self.height))
 				# check if subject in scan radius (bounding box possibly selects too many players)
@@ -257,7 +257,6 @@ class LoBotomyServer:
 		# set player start values
 		player.energy = config.player.max_energy
 		player.x, player.y = (random.random() * self.width, random.random() * self.height)
-		self.field.add(player)
 
 		self._in_game.append(player)
 
