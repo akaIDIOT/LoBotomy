@@ -102,6 +102,12 @@ class Player(Thread, Point):
 
 	def signal_death(self, turns):
 		self.state = PlayerState.DEAD
+
+		# reset action requests for remainder of turn
+		self.move_action = None
+		self.fire_action = None
+		self.scan_action = None
+
 		self.send(protocol.death(turns).values())
 
 	def signal_detect(self, name, angle, distance, energy):
