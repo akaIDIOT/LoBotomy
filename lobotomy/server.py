@@ -96,8 +96,12 @@ class LoBotomyServer:
 		"""
 		TODO: document me
 		"""
-		# TODO: implement me
-		return set()
+		def in_bounds(player):
+			p_x, p_y = player.location
+			x1, y1, x2, y2 = bounds
+			return p_x >= x1 and p_x < x2 and p_y >= y1 and p_y < y2
+
+		return set(player for player in self._in_game if in_bounds(player))
 
 	def execute_moves(self, players):
 		for player in players:
@@ -165,6 +169,7 @@ class LoBotomyServer:
 						util.angle(radius.distance(subject.location)[1], epicenter),
 						charge
 					)
+					logging.info('{} hit {} for {} (new energy: {})'.format(player.name, subject.name, charge, subject.energy))
 					# check to see if the subject died from this hit
 					if subject.energy <= 0.0:
 						subject.signal_death(config.game.dead_turns)
@@ -215,6 +220,7 @@ class LoBotomyServer:
 								util.distance(player.location, wrapped_location),
 								subject.energy
 						)
+						logging.info('{} detected {}'.format(player.name, subject.name))
 
 	def register(self, name, player):
 		if name in self._players:
@@ -240,9 +246,6 @@ class LoBotomyServer:
 		if player in self._in_game:
 			# remove player from game
 			self._in_game.remove(player)
-			if player.region:
-				# remove player from battle field (take a shortcut to its own region
-				player.region.remove(player)
 
 		# remove player from online players
 		del self._players[name]
