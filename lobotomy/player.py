@@ -82,7 +82,8 @@ class Player(Thread):
 				self.shutdown()
 
 	def signal_begin(self, turn_number, energy):
-		self.state = PlayerState.ACTING
+		if self.state is PlayerState.WAITING:
+			self.state = PlayerState.ACTING
 
 		# reset action requests
 		self.move_action = None
@@ -92,7 +93,8 @@ class Player(Thread):
 		self.send(protocol.begin(turn_number, energy).values())
 
 	def signal_end(self):
-		self.state = PlayerState.WAITING
+		if self.state is not PlayerState.DEAD:
+			self.state = PlayerState.WAITING
 		self.send(protocol.end().values())
 
 	def signal_hit(self, name, angle, charge):
