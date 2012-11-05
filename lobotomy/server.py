@@ -169,15 +169,18 @@ class LoBotomyServer:
 						util.angle(radius.distance(subject.location)[1], epicenter),
 						charge
 					)
-					logging.info('{} hit {} for {} (new energy: {})'.format(player.name, subject.name, charge, subject.energy))
+					logging.info('player {} hit {} for {} (new energy: {})'.format(player.name, subject.name, charge, subject.energy))
 					# check to see if the subject died from this hit
 					if subject.energy <= 0.0:
+						logging.info("player {} died from {}'s bomb".format(subject.name, player.name))
 						subject.signal_death(config.game.dead_turns)
 
 			player.energy -= cost
 			if player.energy <= 0.0:
 				# signal player is dead
 				player.signal_death(config.game.dead_turns)
+				# XXX: possibly more to do with hitting one's self
+				logging.info('player {} died from exhaustion (fire)'.format(player.name))
 
 	def execute_scans(self, players):
 		for player in players:
@@ -195,6 +198,7 @@ class LoBotomyServer:
 			if player.energy <= 0.0:
 				# signal player is dead
 				player.signal_death(config.game.dead_turns)
+				logging.info('player {} died from exhaustion (scan)'.format(player.name))
 			else:
 				x, y = player.location
 				# calculate the bounding box for the scan
@@ -220,7 +224,7 @@ class LoBotomyServer:
 								util.distance(player.location, wrapped_location),
 								subject.energy
 						)
-						logging.info('{} detected {}'.format(player.name, subject.name))
+						logging.info('player {} detected {}'.format(player.name, subject.name))
 
 	def register(self, name, player):
 		if name in self._players:
