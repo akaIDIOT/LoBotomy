@@ -8,7 +8,6 @@ import time
 
 from lobotomy import config, game, LoBotomyException, protocol, util
 from lobotomy.player import Player, PlayerState
-from lobotomy.quadtree import QuadTree
 
 class LoBotomyServer:
 	"""
@@ -105,13 +104,13 @@ class LoBotomyServer:
 			# unpack required information
 			angle, distance = player.move_action
 			# calculate new values
-			x, y = util.move_wrapped((player.x, player.y), angle, distance, (self.width, self.height))
+			x, y = util.move_wrapped(player.location, angle, distance, (self.width, self.height))
 			# log action and subtract energy cost
 			cost = game.move_cost(distance)
 			# TODO: truncate location tuples to x decimals
 			logging.info('player {} moved from {} to {} (cost: {})'.format(
 				player.name,
-				(player.x, player.y),
+				player.location,
 				(x, y),
 				cost
 			))
@@ -121,7 +120,7 @@ class LoBotomyServer:
 				player.signal_death(config.game.dead_turns)
 			else:
 				# move player on the battlefield
-				player.move((x, y))
+				player.location = (x, y)
 
 	def execute_fires(self, players):
 		for player in players:
@@ -130,13 +129,13 @@ class LoBotomyServer:
 			# TODO: log fire action for player
 
 			# calculate the epicenter of the blast
-			epicenter = util.move_wrapped((player.x, player.y), angle, distance, (self.width, self.height))
+			epicenter = util.move_wrapped(player.location, angle, distance, (self.width, self.height))
 
 			# subtract energy cost
 			cost = game.fire_cost(distance, radius, charge)
 			logging.info('player {} at {} fired at {} (radius: {}, charge: {})'.format(
 				player.name,
-				(player.x, player.y),
+				player.location,
 				epicenter,
 				radius,
 				charge
@@ -157,13 +156,13 @@ class LoBotomyServer:
 			# check if subject in blast radius (bounding box possibly selects too many players)
 			for subject in subjects:
 				# calculate distance to epicenter for all subjects, signal hit if ... hit
-				if (subject.x, subject.y) in radius:
+				if subject.location in radius:
 					# subtract energy equal to charge from subject that was hit
 					subject.energy -= charge
 					# signal the subject it was hit
 					subject.signal_hit(
 						player.name,
-						util.angle(radius.distance((subject.x, subject.y))[1], epicenter),
+						util.angle(radius.distance(subject.location)[1], epicenter),
 						charge
 					)
 					# check to see if the subject died from this hit
@@ -181,7 +180,7 @@ class LoBotomyServer:
 			# TODO: log scan action for player
 			logging.info('player {} at {} scanned with radius {}'.format(
 				player.name,
-				(player.x, player.y),
+				player.location,
 				radius
 			))
 
@@ -192,27 +191,28 @@ class LoBotomyServer:
 				# signal player is dead
 				player.signal_death(config.game.dead_turns)
 			else:
+				x, y = player.location
 				# calculate the bounding box for the scan
 				bounds = (
-					player.x - radius, player.y - radius,
-					player.x + radius, player.y + radius
+					x - radius, y - radius,
+					x + radius, y + radius
 				)
 				# collect all players in the bounding box for the blast
 				subjects = set()
 				for region in util.generate_wrapped_bounds((0, 0, self.width, self.height), bounds):
 					subjects = subjects.union(self.find_players(region))
 
-				radius = util.WrappedRadius((player.x, player.y), radius, (self.width, self.height))
+				radius = util.WrappedRadius(player.location, radius, (self.width, self.height))
 				# check if subject in scan radius (bounding box possibly selects too many players)
 				for subject in subjects:
 					# calculate distance to all subjects, signal detect if within scan
 					# TODO: using radius twice runs the expensive operation twice
-					(distance, wrapped_location) = radius.distance((subject.x, subject.y))
-					if subject is not player and (subject.x, subject.y) in radius:
+					(distance, wrapped_location) = radius.distance(subject.location)
+					if subject is not player and subject.location in radius:
 						player.signal_detect(
 								subject.name,
-								util.angle((player.x, player.y), wrapped_location),
-								util.distance((player.x, player.y), wrapped_location),
+								util.angle(player.location, wrapped_location),
+								util.distance(player.location, wrapped_location),
 								subject.energy
 						)
 
@@ -256,7 +256,7 @@ class LoBotomyServer:
 		# TODO: only spawn player just before turn begin
 		# set player start values
 		player.energy = config.player.max_energy
-		player.x, player.y = (random.random() * self.width, random.random() * self.height)
+		player.location = (random.random() * self.width, random.random() * self.height)
 
 		self._in_game.append(player)
 

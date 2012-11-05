@@ -5,14 +5,13 @@ import socket
 from threading import Thread
 
 from lobotomy import config, game, LoBotomyException, protocol
-from lobotomy.quadtree import Point
 from lobotomy.util import enum
 
 
 # enumerate possible player states
 PlayerState = enum('VOID', 'WAITING', 'ACTING', 'DEAD')
 
-class Player(Thread, Point):
+class Player(Thread):
 	"""
 	Class modeling a player, handling messages from and to a client.
 
@@ -21,9 +20,7 @@ class Player(Thread, Point):
 
 	def __init__(self, server, sock):
 		# call the constructor of Thread
-		Thread.__init__(self)
-		# call the constructor of Point
-		Point.__init__(self, None, None)
+		super().__init__()
 
 		# indicate being a daemon thread
 		self.daemon = True
@@ -48,6 +45,7 @@ class Player(Thread, Point):
 		self.scan_action = None
 
 		# game state variables
+		self.location = (None, None)
 		self.energy = 0.0
 		self.dead_turns = 0
 
