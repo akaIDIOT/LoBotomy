@@ -121,7 +121,8 @@ class LoBotomyServer:
 			player.energy -= cost
 			if player.energy <= 0.0:
 				# signal player is dead
-				player.signal_death(config.game.dead_turns)
+				self.player_death(player)
+				logging.info('player {} died from exhaustion (move)'.format(player.name))
 			else:
 				# move player on the battlefield
 				player.location = (x, y)
@@ -173,12 +174,12 @@ class LoBotomyServer:
 					# check to see if the subject died from this hit
 					if subject.energy <= 0.0:
 						logging.info("player {} died from {}'s bomb".format(subject.name, player.name))
-						subject.signal_death(config.game.dead_turns)
+						self.player_death(subject)
 
 			player.energy -= cost
 			if player.energy <= 0.0:
 				# signal player is dead
-				player.signal_death(config.game.dead_turns)
+				self.player_death(player)
 				# XXX: possibly more to do with hitting one's self
 				logging.info('player {} died from exhaustion (fire)'.format(player.name))
 
@@ -197,7 +198,7 @@ class LoBotomyServer:
 			player.energy -= cost
 			if player.energy <= 0.0:
 				# signal player is dead
-				player.signal_death(config.game.dead_turns)
+				self.player_death(player)
 				logging.info('player {} died from exhaustion (scan)'.format(player.name))
 			else:
 				x, y = player.location
@@ -225,6 +226,13 @@ class LoBotomyServer:
 								subject.energy
 						)
 						logging.info('player {} detected {}'.format(player.name, subject.name))
+
+	def player_death(self, player):
+		"""
+		TODO: document me
+		"""
+		player.signal_death(config.game.dead_turns)
+
 
 	def register(self, name, player):
 		if name in self._players:
