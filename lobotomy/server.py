@@ -68,8 +68,10 @@ class LoBotomyServer:
 			# FIXME: iterating over ALL the players time and time again must be slow
 
 			# send all alive players a new turn command
+			logging.info('turn {}, currently {} players in game'.format(self.turn_number, len(self._in_game)))
 			for player in self._in_game:
-				player.energy = min(player.energy + config.player.turn_heal, 1.0)
+				if player.state is not PlayerState.DEAD:
+					player.energy = min(player.energy + config.player.turn_heal, 1.0)
 				player.signal_begin(self.turn_number, player.energy)
 
 			# wait the configured amount of time for players to submit commands
@@ -80,7 +82,7 @@ class LoBotomyServer:
 				player.signal_end()
 
 			# decrement wait counters for dead players
-			for player in filter(lambda p: p.state is PlayerState.DEAD, self._players.values()):
+			for player in [p for p in self._players.values() if p.state is PlayerState.DEAD]:
 				player.dead_turns -= 1
 
 			# execute all requested move actions
@@ -99,7 +101,7 @@ class LoBotomyServer:
 		def in_bounds(player):
 			p_x, p_y = player.location
 			x1, y1, x2, y2 = bounds
-			return p_x >= x1 and p_x < x2 and p_y >= y1 and p_y < y2
+			return p_x is not None and x1 <= p_x < x2 and y1 <= p_y < y2
 
 		return set(player for player in self._in_game if in_bounds(player))
 
@@ -231,8 +233,10 @@ class LoBotomyServer:
 		"""
 		TODO: document me
 		"""
+		player.energy = 0.0
+		player.location = (None, None)
+		# signal death to player
 		player.signal_death(config.game.dead_turns)
-
 
 	def register(self, name, player):
 		if name in self._players:
@@ -273,7 +277,9 @@ class LoBotomyServer:
 		player.energy = config.player.max_energy
 		player.location = (random.random() * self.width, random.random() * self.height)
 
-		self._in_game.append(player)
+		# check to see if this is a spawn or a respawn
+		if player not in self._in_game:
+			self._in_game.append(player)
 
 	def shutdown(self):
 		# avoid double shutdown
