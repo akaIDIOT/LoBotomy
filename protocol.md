@@ -1,7 +1,7 @@
 Network connection life cycle
 =============================
 
-Communication with a LoBotomy server is done by opening a network socket to it and starting a conversation.
+Communication with a LoBotomy server is done by opening a network socket (TCP) to it and starting a conversation.
 To keep things simple, such a conversation is done by sending strings over the network connection.
 A single command consists of the command's name and its arguments separated by spaces, terminated with a newline character (`\n`).
 Arguments are all encoded as strings over the wire, so a float will be sent as `"0.12345"`, for example.
