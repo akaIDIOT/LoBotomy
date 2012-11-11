@@ -45,7 +45,6 @@ class ExampleBot:
 		while self.in_game:
 			# Ask to be spawned
 			self.send_spawn()
-			logging.info('Requesting spawn...')
 			self.parse_pregame()
 			while self.playing:
 				logging.info('Let\'s play! (at {} energy)'.format(self.energy))
@@ -79,6 +78,7 @@ class ExampleBot:
 		'''
 		Send a spawn request to the server
 		'''
+		logging.info('Requesting spawn...')
 		self.send_msg('spawn')
 
 	def parse_pregame(self):
@@ -100,8 +100,11 @@ class ExampleBot:
 				elif command == 'begin':
 					self.turn_number = parsed['turn_number']
 					self.energy = parsed['energy']
-					self.playing = True
+					self.playing = self.energy > 0.0
 					return
+				elif command == 'death':
+					logging.info('We died! Dead for {} turns'.format(parsed['turns']))
+					self.playing = False
 				else:
 					continue
 			except KeyError:

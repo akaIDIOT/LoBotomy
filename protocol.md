@@ -113,7 +113,7 @@ Sent by the server to indicate that you were hit by a bomb, with the following d
 ### death
 Format: `death turns`
 
-Sent by the server to inform you that you are dead and how long you need to wait before you can respawn:
+Sent by the server to inform you that you are dead and how long you need to wait before you can respawn (yes, that's something you need to do yourself):
 
 1. **turns** (integer): how long you will stay dead.
 
