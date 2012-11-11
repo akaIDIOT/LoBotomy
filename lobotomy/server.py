@@ -7,14 +7,16 @@ from threading import Thread
 import time
 
 from lobotomy import config, game, LoBotomyException, protocol, util
+from lobotomy.event import Emitter
 from lobotomy.player import Player, PlayerState
 
-class LoBotomyServer:
+class LoBotomyServer(Emitter):
 	"""
 	Server for a LoBotomy game.
 	"""
 
 	def __init__(self, field_dimensions = config.game.field_dimensions, host = config.host.address, port = config.host.port):
+		super().__init__()
 		# create battlefield
 		self.width, self.height = field_dimensions
 
