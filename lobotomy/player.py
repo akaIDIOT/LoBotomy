@@ -102,6 +102,7 @@ class Player(Thread):
 
 	def signal_death(self, turns):
 		self.state = PlayerState.DEAD
+		self.dead_turns = turns
 
 		# reset action requests for remainder of turn
 		self.move_action = None
