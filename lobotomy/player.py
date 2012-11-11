@@ -70,11 +70,11 @@ class Player(Thread):
 					# handle command
 					self._handlers[command](**arguments)
 				except LoBotomyException as e:
-					self.send_error(e.errno)
+					self.send_error(e.errno, str(e))
 				except KeyError as e:
-					self.send_error(301)
+					self.send_error(301, str(e))
 				except ValueError as e:
-					self.send_error(302)
+					self.send_error(302, str(e))
 		except Exception as e:
 			if not self._shutdown:
 				# error occurred during regular operations
@@ -170,9 +170,13 @@ class Player(Thread):
 
 		self.scan_action = (radius,)
 
-	def send_error(self, error):
+	def send_error(self, error, message = ''):
 		logging.debug('client caused error %d', error)
-		self.send(protocol.error(error, protocol.ERRORS[error]).values())
+		if message:
+			message = protocol.ERRORS[error] + ': ' + str(message)
+		else:
+			message = protocol.ERRORS[error]
+		self.send(protocol.error(error, message).values())
 
 	def send(self, command):
 		# send all data as strings separated by spaces, terminated by a newline
