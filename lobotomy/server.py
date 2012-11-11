@@ -73,8 +73,18 @@ class LoBotomyServer(Emitter):
 			logging.info('turn {}, currently {} players in game'.format(self.turn_number, len(self._in_game)))
 			for player in self._in_game:
 				if player.state is not PlayerState.DEAD:
+					prev_energy = player.energy
 					player.energy = min(player.energy + config.player.turn_heal, 1.0)
+					# emit heal event with energy mutation
+					self.emit_event(
+						type = 'player_heal',
+						player = player.name,
+						energy = (prev_energy, player.energy)
+					)
 				player.signal_begin(self.turn_number, player.energy)
+
+			# emit turn start event
+			self.emit_event(type = 'turn_start', turn = self.turn_number, num_players = len(self._in_game))
 
 			# wait the configured amount of time for players to submit commands
 			time.sleep(config.game.turn_duration / 1000)
@@ -83,9 +93,17 @@ class LoBotomyServer(Emitter):
 			for player in self._in_game:
 				player.signal_end()
 
+			# emit turn end event
+			self.emit_event(type = 'turn_end', turn = self.turn_number)
+
 			# decrement wait counters for dead players
 			for player in [p for p in self._players.values() if p.state is PlayerState.DEAD]:
 				player.dead_turns -= 1
+				self.emit_event(
+					type = 'player_dead_turns_decrement',
+					player = player.name,
+					turns = player.dead_turns
+				)
 
 			# execute all requested move actions
 			self.execute_moves(player for player in self._in_game if player.move_action is not None)
@@ -122,10 +140,27 @@ class LoBotomyServer(Emitter):
 				(x, y),
 				cost
 			))
+			prev_energy = player.energy
 			player.energy -= cost
+			self.emit_event(
+				type = 'player_move',
+				player = player.name,
+				angle = angle,
+				distance = distance,
+				location = (player.location, (x, y)),
+				cost = cost,
+				energy = (prev_energy, player.energy)
+			)
 			if player.energy <= 0.0:
 				# signal player is dead
 				self.player_death(player)
+				self.emit_event(
+					type = 'player_suicide',
+					player = player.name,
+					action = 'move',
+					cost = cost,
+					energy = (prev_energy, player.energy)
+				)
 				logging.info('player {} died from exhaustion (move)'.format(player.name))
 			else:
 				# move player on the battlefield
@@ -150,6 +185,35 @@ class LoBotomyServer(Emitter):
 				charge
 			))
 
+			prev_energy = player.energy
+			player.energy -= cost
+
+			# emit player fire event
+			self.emit_event(
+				type = 'player_fire',
+				player = player.name,
+				location = player.location,
+				angle = angle,
+				distance = distance,
+				radius = radius,
+				charge = charge,
+				cost = cost,
+				epicenter = epicenter,
+				energy = (prev_energy, player.energy)
+			)
+
+			if player.energy <= 0.0:
+				# signal player is dead
+				self.player_death(player)
+				self.emit_event(
+					type = 'player_suicide',
+					action = 'fire',
+					cost = cost,
+					energy = (prev_energy, player.energy)
+				)
+				# XXX: possibly more to do with hitting one's self
+				logging.info('player {} died from exhaustion (fire)'.format(player.name))
+
 			# calculate the bounding box for the blast
 			bounds = (
 				epicenter[0] - radius, epicenter[1] - radius,
@@ -167,7 +231,22 @@ class LoBotomyServer(Emitter):
 				# calculate distance to epicenter for all subjects, signal hit if ... hit
 				if subject.location in radius:
 					# subtract energy equal to charge from subject that was hit
+					prev_energy = subject.energy
 					subject.energy -= charge
+					# emit player hit event
+					self.emit_event(
+						type = 'player_hit',
+						player = subject.name,
+						location = subject.location,
+						epicenter = epicenter,
+						radius = radius,
+						charge = charge,
+						energy = (prev_energy, subject.energy),
+						fatal = subject.energy <= 0.0,
+						attacker = player.name,
+						attacker_location = player.location,
+						attacker_energy = player.energy
+					)
 					# signal the subject it was hit
 					subject.signal_hit(
 						player.name,
@@ -180,17 +259,9 @@ class LoBotomyServer(Emitter):
 						logging.info("player {} died from {}'s bomb".format(subject.name, player.name))
 						self.player_death(subject)
 
-			player.energy -= cost
-			if player.energy <= 0.0:
-				# signal player is dead
-				self.player_death(player)
-				# XXX: possibly more to do with hitting one's self
-				logging.info('player {} died from exhaustion (fire)'.format(player.name))
-
 	def execute_scans(self, players):
 		for player in players:
 			(radius,) = player.scan_action
-			# TODO: log scan action for player
 			logging.info('player {} at {} scanned with radius {}'.format(
 				player.name,
 				player.location,
@@ -199,10 +270,26 @@ class LoBotomyServer(Emitter):
 
 			# subtract energy cost
 			cost = game.scan_cost(radius)
+			prev_energy = player.energy
 			player.energy -= cost
+
+			self.emit_event(
+				type = 'player_scan',
+				player = player.name,
+				location = player.location,
+				radius = radius,
+				cost = cost,
+				energy = (prev_energy, player.energy)
+			)
 			if player.energy <= 0.0:
 				# signal player is dead
 				self.player_death(player)
+				self.emit_event(
+					type = 'player_suicide',
+					action = 'scan',
+					cost = cost,
+					energy = (prev_energy, player.energy)
+				)
 				logging.info('player {} died from exhaustion (scan)'.format(player.name))
 			else:
 				x, y = player.location
@@ -228,6 +315,16 @@ class LoBotomyServer(Emitter):
 								util.angle(player.location, wrapped_location),
 								util.distance(player.location, wrapped_location),
 								subject.energy
+						)
+						self.emit_event(
+							type = 'player_detect',
+							player = player.name,
+							energy = player.energy,
+							location = player.location,
+							radius = radius,
+							detected = subject.name,
+							detected_location = subject.location,
+							detected_energy = subject.energy
 						)
 						logging.info('player {} detected {}'.format(player.name, subject.name))
 
@@ -264,6 +361,10 @@ class LoBotomyServer(Emitter):
 		if player in self._in_game:
 			# remove player from game
 			self._in_game.remove(player)
+			self.emit_event(
+				type = 'player_leave',
+				player = player.name
+			)
 
 		# remove player from online players
 		del self._players[name]
@@ -278,6 +379,13 @@ class LoBotomyServer(Emitter):
 		# set player start values
 		player.energy = config.player.max_energy
 		player.location = (random.random() * self.width, random.random() * self.height)
+
+		self.emit_event(
+			type = 'player_spawn',
+			player = player.name,
+			energy = player.energy,
+			location = player.location
+		)
 
 		# check to see if this is a spawn or a respawn
 		if player not in self._in_game:
