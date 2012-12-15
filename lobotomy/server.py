@@ -1,5 +1,6 @@
 # make sure flake8 ignores this file: flake8: noqa
 
+import pdb
 import logging
 import random
 import socket
@@ -93,7 +94,12 @@ class LoBotomyServer(Emitter):
 			self.emit_event(type = 'turn_start', turn = self.turn_number, num_players = len(self._in_game))
 
 			# wait the configured amount of time for players to submit commands
-			time.sleep(config.game.turn_duration / 1000)
+			if config.host.debug:
+				ans = input('>>> Press [enter] to continue turn or type "pdb" to start pdb: ')
+				if 'pdb' in ans:
+					pdb.Pdb(nosigint=True).set_trace()
+			else:
+				time.sleep(config.game.turn_duration / 1000)
 
 			# send all players the end turn command
 			for player in self._in_game:
