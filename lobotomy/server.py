@@ -30,6 +30,23 @@ class LoBotomyServer(Emitter):
 
 		self.turn_number = 0
 
+	def socket_listen(self):
+		# make the socket listen for new connections
+		self._ssock.listen(5)
+
+		# loop as long as a shutdown was not requested
+		while not self._shutdown:
+			try:
+				# accept a connection from a client
+				client, address = self._ssock.accept()
+				logging.info('client from %s connected', address[0])
+				Player(self, client).start()
+			except Exception as e:
+				if not self._shutdown:
+					# not an expected exception
+					logging.critical('unexpected network error, shutting down server: %s', str(e))
+
+
 	def serve_forever(self):
 		logging.debug('preparing network setup for serving at "%s:%d"', self.host, self.port)
 		self._ssock = socket.socket()
@@ -37,26 +54,14 @@ class LoBotomyServer(Emitter):
 		try:
 			# bind a socket to the specified host and port
 			self._ssock.bind((self.host, self.port))
-			# make the socket listen for new connections
-			self._ssock.listen(5)
 			logging.info('successfully bound to %s:%d, listening for clients', self.host, self.port)
-
 			self._shutdown = False
 
-			# start a game
-			Thread(name = 'game loop', target = self.run_game).start()
+			Thread(name = 'socket loop', target = self.socket_listen, daemon = True).start()
 
-			# loop as long as a shutdown was not requested
-			while not self._shutdown:
-				try:
-					# accept a connection from a client
-					client, address = self._ssock.accept()
-					logging.info('client from %s connected', address[0])
-					Player(self, client).start()
-				except Exception as e:
-					if not self._shutdown:
-						# not an expected exception
-						logging.critical('unexpected network error, shutting down server: %s', str(e))
+			# start a game
+			self.run_game()
+
 		except Exception as e:
 			logging.critical('unexpected error: %s', str(e))
 
@@ -105,6 +110,7 @@ class LoBotomyServer(Emitter):
 					player = player.name,
 					turns = player.dead_turns
 				)
+
 
 			# execute all requested move actions
 			self.execute_moves(player for player in self._in_game if player.move_action is not None)
@@ -407,4 +413,3 @@ class LoBotomyServer(Emitter):
 		except:
 			# ignore at this point
 			pass
-
