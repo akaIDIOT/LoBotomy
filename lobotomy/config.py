@@ -1,4 +1,6 @@
 # make sure flake8 ignores this file: flake8: noqa
+import argparse
+import sys
 
 # store network details
 class host:
@@ -6,6 +8,8 @@ class host:
 	address = ''
 	# port to listen on (1452)
 	port = sum(map(ord, 'LoBotomyServer'))
+	# is host in debug mode?
+	debug = False
 
 # store general game settings
 class game:
@@ -23,3 +27,16 @@ class player:
 	# amount of energy that is recharged at the end of each turn
 	turn_heal = 0.2
 
+def parse_args():
+	parser = argparse.ArgumentParser(description='A server for the awesome Lobotomy game')
+
+	parser.add_argument('--debug', '-d', action='store_true', dest='host.debug', default=False, help='Run server in debug mode, giving you full control over which commands are sent to the first bot that connects')
+
+	parse_result = parser.parse_args()
+
+	# Convert stuff in parse_result to properties of above classes
+	# This may be a bit ugly, but was the shortest/cleanest i could come up
+	# with :)
+	for k, v in vars(parse_result).items():
+		target, var = k.split('.')
+		setattr(getattr(sys.modules[__name__], target), var, v)
