@@ -46,7 +46,7 @@ class LoBotomyServer(Emitter):
 				if not self._shutdown:
 					# not an expected exception
 					logging.critical('unexpected network error, shutting down server: %s', str(e))
-
+					self.shutdown()
 
 	def serve_forever(self):
 		logging.debug('preparing network setup for serving at "%s:%d"', self.host, self.port)
