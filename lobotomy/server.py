@@ -6,8 +6,9 @@ import random
 import socket
 from threading import Thread
 import time
+import cmd
 
-from lobotomy import config, game, LoBotomyException, protocol, util
+from lobotomy import manual_control, config, game, LoBotomyException, protocol, util
 from lobotomy.event import Emitter
 from lobotomy.player import Player, PlayerState
 
@@ -117,6 +118,11 @@ class LoBotomyServer(Emitter):
 					turns = player.dead_turns
 				)
 
+			debug_hosts = [p for p in self._in_game if p.name in config.host.debug_names]
+
+			# execute all actions as determined by server admin, for
+			# debug_hosts
+			self.handle_manually(debug_hosts)
 
 			# execute all requested move actions
 			self.execute_moves(player for player in self._in_game if player.move_action is not None)
@@ -137,6 +143,15 @@ class LoBotomyServer(Emitter):
 			return p_x is not None and x1 <= p_x < x2 and y1 <= p_y < y2
 
 		return set(player for player in self._in_game if in_bounds(player))
+
+	def handle_manually(self, players):
+		for p in players:
+		# Gather commands from user
+			commands = []
+			controller = manual_control.ManualControl(self, commands)
+			controller.cmdloop()
+			for c in commands:
+				getattr(p, 'signal_' + c['command'])(*list(c.values())[1:])
 
 	def execute_moves(self, players):
 		for player in players:
