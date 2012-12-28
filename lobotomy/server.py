@@ -59,7 +59,9 @@ class LoBotomyServer(Emitter):
 			logging.info('successfully bound to %s:%d, listening for clients', self.host, self.port)
 			self._shutdown = False
 
-			Thread(name = 'socket loop', target = self.socket_listen, daemon = True).start()
+			service_thread = Thread(name = 'socket loop', target = self.socket_listen)
+			service_thread.daemon = True
+			service_thread.start()
 
 			# start a game
 			self.run_game()
