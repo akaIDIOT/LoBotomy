@@ -122,18 +122,26 @@ class LoBotomyServer(Emitter):
 
 			debug_hosts = [p for p in self._in_game if p.name in config.host.debug_names]
 
-			# execute all actions as determined by server admin, for
-			# debug_hosts
-			self.handle_manually(debug_hosts)
+			signal_cache = []
 
 			# execute all requested move actions
-			self.execute_moves(player for player in self._in_game if player.move_action is not None)
+			signal_cache.extend(self.execute_moves(player for player in self._in_game if player.move_action is not None))
 
 			# execute all requested fire actions
-			self.execute_fires(player for player in self._in_game if player.fire_action is not None)
+			signal_cache.extend(self.execute_fires(player for player in self._in_game if player.fire_action is not None))
 
 			# execute all requested scan actions
-			self.execute_scans(player for player in self._in_game if player.scan_action is not None)
+			signal_cache.extend(self.execute_scans(player for player in self._in_game if player.scan_action is not None))
+
+			# execute all actions as determined by server admin, for
+			# debug_hosts
+			signal_cache.extend(self.handle_manually(debug_hosts))
+			# shuffle the signals for fairness
+			random.shuffle(signal_cache)
+			for s in signal_cache:
+				# first item is the function to call, the rest of the items are
+				# the arguments
+				s[0](*s[1:])
 
 	def find_players(self, bounds):
 		"""
@@ -147,15 +155,17 @@ class LoBotomyServer(Emitter):
 		return set(player for player in self._in_game if in_bounds(player))
 
 	def handle_manually(self, players):
+		result_signals = []
 		for p in players:
 		# Gather commands from user
 			commands = []
-			controller = manual_control.ManualControl(self, commands)
+			controller = manual_control.ManualControl(self, p, commands)
 			controller.cmdloop()
-			for c in commands:
-				getattr(p, 'signal_' + c['command'])(*list(c.values())[1:])
+			result_signals.extend(commands)
+		return result_signals
 
 	def execute_moves(self, players):
+		result_signals = []
 		for player in players:
 			# unpack required information
 			angle, distance = player.move_action
@@ -183,7 +193,7 @@ class LoBotomyServer(Emitter):
 			)
 			if player.energy <= 0.0:
 				# signal player is dead
-				self.player_death(player)
+				result_signals.append(self.player_death(player))
 				self.emit_event(
 					type = 'player_suicide',
 					player = player.name,
@@ -195,8 +205,10 @@ class LoBotomyServer(Emitter):
 			else:
 				# move player on the battlefield
 				player.location = (x, y)
+		return result_signals
 
 	def execute_fires(self, players):
+		result_signals = []
 		for player in players:
 			# unpack required information
 			(angle, distance, radius, charge) = player.fire_action
@@ -234,7 +246,7 @@ class LoBotomyServer(Emitter):
 
 			if player.energy <= 0.0:
 				# signal player is dead
-				self.player_death(player)
+				result_signals.append(self.player_death(player))
 				self.emit_event(
 					type = 'player_suicide',
 					action = 'fire',
@@ -278,18 +290,19 @@ class LoBotomyServer(Emitter):
 						attacker_energy = player.energy
 					)
 					# signal the subject it was hit
-					subject.signal_hit(
-						player.name,
-						util.angle(radius.distance(subject.location)[1], epicenter),
-						charge
-					)
+					result_signals.append((player.signal_hit, player.name,
+							util.angle(radius.distance(subject.location)[1], epicenter),
+							charge
+					))
 					logging.info('player {} hit {} for {} (new energy: {})'.format(player.name, subject.name, charge, subject.energy))
 					# check to see if the subject died from this hit
 					if subject.energy <= 0.0:
 						logging.info("player {} died from {}'s bomb".format(subject.name, player.name))
-						self.player_death(subject)
+						result_signals.append(self.player_death(subject))
+		return result_signals
 
 	def execute_scans(self, players):
+		result_signals = []
 		for player in players:
 			(radius,) = player.scan_action
 			logging.info('player {} at {} scanned with radius {}'.format(
@@ -313,7 +326,7 @@ class LoBotomyServer(Emitter):
 			)
 			if player.energy <= 0.0:
 				# signal player is dead
-				self.player_death(player)
+				result_signals.append(self.player_death(player))
 				self.emit_event(
 					type = 'player_suicide',
 					action = 'scan',
@@ -340,12 +353,11 @@ class LoBotomyServer(Emitter):
 					# TODO: using radius twice runs the expensive operation twice
 					(distance, wrapped_location) = radius.distance(subject.location)
 					if subject is not player and subject.location in radius:
-						player.signal_detect(
-								subject.name,
-								util.angle(player.location, wrapped_location),
-								util.distance(player.location, wrapped_location),
-								subject.energy
-						)
+						result_signals.append((player.signal_detect, subject.name,
+							util.angle(player.location, wrapped_location),
+							util.distance(player.location, wrapped_location),
+							subject.energy
+						))
 						self.emit_event(
 							type = 'player_detect',
 							player = player.name,
@@ -357,6 +369,7 @@ class LoBotomyServer(Emitter):
 							detected_energy = subject.energy
 						)
 						logging.info('player {} detected {}'.format(player.name, subject.name))
+		return result_signals
 
 	def player_death(self, player):
 		"""
@@ -364,8 +377,8 @@ class LoBotomyServer(Emitter):
 		"""
 		player.energy = 0.0
 		player.location = (None, None)
-		# signal death to player
-		player.signal_death(config.game.dead_turns)
+		# return signal
+		return (player.signal_death, config.game.dead_turns)
 
 	def register(self, name, player):
 		if name in self._players:
