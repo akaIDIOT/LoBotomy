@@ -59,7 +59,10 @@ class ExampleBot:
 		'''
 		Ask to join a game
 		'''
-		self.send_msg('join ' + BOT_NAME)
+		if sys.argv[1:]:
+			self.send_msg('join ' + sys.argv[1])
+		else:
+			self.send_msg('join ' + BOT_NAME)
 
 	def parse_welcome(self):
 		'''
