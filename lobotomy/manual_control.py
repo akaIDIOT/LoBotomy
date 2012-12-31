@@ -4,9 +4,10 @@ import cmd
 from lobotomy import protocol
 
 class ManualControl(cmd.Cmd):
-	def __init__(self, server, commands, *args):
+	def __init__(self, server, player, commands, *args):
 		super().__init__(*args)
 		self.server = server
+		self.player = player
 		self.commands = commands
 
 	def do_hit(self, line):
@@ -53,7 +54,8 @@ class ManualControl(cmd.Cmd):
 	def parse_command(self, command):
 		try:
 			cmd = protocol.parse_msg(command)
-			self.commands.append(cmd)
+			signal_function = getattr(self.player, 'signal_' + cmd['command'])
+			self.commands.append((signal_function,) + tuple(cmd.values())[1:])
 			print('Will send command ' + str(list(str(k) + ' : ' + str(v) for (k,v) in cmd.items())))
 		except ValueError as e:
 			print('Error while parsing command:')
