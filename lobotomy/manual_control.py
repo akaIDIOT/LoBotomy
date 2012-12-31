@@ -55,7 +55,7 @@ class ManualControl(cmd.Cmd):
 		try:
 			cmd = protocol.parse_msg(command)
 			signal_function = getattr(self.player, 'signal_' + cmd['command'])
-			self.commands.append((signal_function,) + tuple(list(cmd.values())[1:]))
+			self.commands.append((signal_function,) + tuple(cmd.values())[1:])
 			print('Will send command ' + str(list(str(k) + ' : ' + str(v) for (k,v) in cmd.items())))
 		except ValueError as e:
 			print('Error while parsing command:')
