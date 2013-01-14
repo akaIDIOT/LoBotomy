@@ -14,8 +14,6 @@ PlayerState = enum('VOID', 'WAITING', 'ACTING', 'DEAD')
 class Player(Thread):
 	"""
 	Class modeling a player, handling messages from and to a client.
-
-	TODO: queue signals, just just before end
 	"""
 
 	def __init__(self, server, sock):
@@ -37,6 +35,9 @@ class Player(Thread):
 			'scan': self.handle_scan,
 		}
 
+		# Thread will turn this assignment into a str; '' is as meaningless as
+		# we're gonna get it
+		self.name = ''
 		self.state = PlayerState.VOID
 
 		# actions requested by the client
@@ -48,6 +49,17 @@ class Player(Thread):
 		self.location = (None, None)
 		self.energy = 0.0
 		self.dead_turns = 0
+
+	def serialize(self):
+		"""
+		Returns a simple dict containing this instance's 'state' variables
+		(not to be confused with self.state, of course).
+		"""
+		return {
+			'name': self.name,
+			'energy': self.energy,
+			'location': self.location,
+		}
 
 	def run(self):
 		try:
